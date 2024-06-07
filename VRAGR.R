@@ -327,7 +327,9 @@ compute_vrag <- function(Item_1,
                           Vrag_score == 41 ~ 99.5,
                           Vrag_score == 42 ~ 99.8,
                           Vrag_score == 43 ~ 99.9,
-                          Vrag_score == 44 ~ 100)
+                          Vrag_score == 44 ~ 100,
+                          Vrag_score == 45 ~ 100,
+                          Vrag_score == 46 ~ 100)
   
   #Probability for recedivism
   Prob_5 <- case_when(Risk_Category == 1 ~ 9,
