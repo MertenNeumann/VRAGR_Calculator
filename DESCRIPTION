@@ -1,7 +1,7 @@
 Package: VRAGRCalculator
 Type: Project
 Title: Bilingual Violence Risk Appraisal Guide Revised Calculator
-Version: 2.0.0
+Version: 2.1.0
 Authors@R: person("Merten", "Neumann", role = c("aut", "cre"))
 Description: VRAG-R scoring following the German manual by Rettenberger,
     Gregorio Hertz and Eher (2017), with input validation, checked dataset

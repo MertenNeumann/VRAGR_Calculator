@@ -1,7 +1,7 @@
 # VRAG-R scoring independent of Shiny and external packages.
 # Rettenberger, Gregorio Hertz & Eher (2017), printed pp. 11-12, 20-42, 45-46.
 # Source decisions and limitations: docs/MODEL_AND_SOURCES.md.
-VRAGR_APP_VERSION <- "2.0.0"
+VRAGR_APP_VERSION <- "2.1.0"
 VRAGR_MODEL_VERSION <- "VRAG-R / German manual 2017"
 VRAGR_MANUAL_URL <- "https://krimpub.krimz.de/frontdoor/deliver/index/docId/40/file/bm-online8.pdf"
 vragr_fields <- c("Item_1", "Item_2", paste0("Item_3_", 1:6), "Item_4", paste0("Item_5_", 1:27),

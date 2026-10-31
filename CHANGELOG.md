@@ -1,5 +1,23 @@
 # Changelog
 
+## 2.1.0 — 2026-10-31
+
+- Checked the implementation against the supplied Harris et al. (2015) original,
+  including item rules, final norms, missing-data instructions and worked
+  examples. Documented observed-versus-final rates, percentile differences and
+  inconsistencies in the book examples. The German manual remains authoritative
+  wherever the sources conflict; numerical scoring rules remain unchanged.
+- Defaulted all single-case items to No information. Cormier–Lang counts begin
+  at zero when information is available, preserve edits across status/language
+  changes, and return to zero on reset.
+- Added an optional shaded standard-normal percentile view alongside the default
+  empirical curve, including finite upper-tail handling and both views in exports.
+- Reviewed German UI wording and specialist labels while preserving the German
+  manual's category definitions. Reworked the English-only README.
+- Replaced the boxed R badge with a restrained blue wordmark accent and removed
+  the final AI-disclaimer sentence in both languages.
+- Added original-source, default-state, plot and bilingual browser regressions.
+
 ## 2.0.0 — 2026-10-31
 
 - Reviewed all implemented rules against the German VRAG-R manual; documented

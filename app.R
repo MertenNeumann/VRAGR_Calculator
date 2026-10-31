@@ -5,6 +5,7 @@ library(ggplot2)
 source("VRAGR.R", local=TRUE)
 source("R/workflow.R", local=TRUE)
 source("R/i18n.R", local=TRUE)
+source("R/plots.R", local=TRUE)
 .app_root <- normalizePath(".",mustWork=TRUE)
 options(shiny.maxRequestSize=10*1024^2,shiny.sanitize.errors=TRUE)
 manual_link <- function(label="German manual (PDF)",page=NULL) tags$a(label,
@@ -21,21 +22,25 @@ single_group <- function(group) {
     id <- paste0("single_",field$name)
     label <- tagList(tags$small(class="field-code",field$name)," ",field$en)
     if(field$name %in% vragr_categories || i==12) i18n_select_input(id,label,
-      choices=c("Please select"="",choice_labels(field$name),"No information"="__missing__"),selected="")
-    else numericInput(id,label,value=NA_real_,min=if(i==7) 1 else 0,step=1)
+      choices=c(choice_labels(field$name),"No information"="__missing__"),selected="__missing__")
+    else numericInput(id,label,value=if(i %in% c(5,8)) 0 else NA_real_,min=if(i==7) 1 else 0,step=1)
   })
   extra <- NULL
   if(i %in% c(5,8)) {
     extra <- tagList(i18n_select_input(paste0("single_info_",i),"Information on this item",
-      c("Please select"="","Information available"="known","No information"="missing"),selected=""),
+      c("No information"="missing","Information available"="known"),selected="missing"),
       actionButton(paste0("zero_",i),"Set all counts to zero",class="btn-outline-secondary"))
     controls <- conditionalPanel(sprintf("input.single_info_%d === 'known'",i),div(class="form-grid",controls))
-  } else if(i %in% c(7,9)) extra <- checkboxInput(paste0("single_missing_",i),"No information",FALSE)
+  } else if(i %in% c(7,9)) {
+    extra <- i18n_select_input(paste0("single_info_",i),"Information on this item",
+      c("No information"="missing","Information available"="known"),selected="missing")
+    controls <- conditionalPanel(sprintf("input.single_info_%d === 'known'",i),controls)
+  }
   accordion_panel(paste0("Item ",i," · ",group$en),hint(group$help_en," ",manual_link("Coding guidance",group$page)),
     extra,if(i %in% c(3,10,12)) div(class="form-grid",controls) else controls,value=paste0("item",i))
 }
 ui <- page_navbar(
-  title=div(class="app-brand",span(class="brand-symbol","R"),span("VRAG-R",tags$small("Calculator"))),
+  title=div(class="app-brand",span(class="brand-mark",`aria-hidden`="true"),span("VRAG-R",tags$small("Calculator"))),
   id="main_nav",selected="single",lang="en",fillable=FALSE,window_title="VRAG-R · Calculator",
   theme=bs_theme(version=5,bg="#f5f5f5",fg="#333333",primary="#337ab7",secondary="#60666c",base_font="system-ui"),
   header=tags$head(tags$link(rel="stylesheet",href="app.css"),
@@ -43,17 +48,18 @@ ui <- page_navbar(
     tags$script(src="i18n.js",defer=NA)),
   footer=div(class="app-footer",span(paste("VRAG-R · App",VRAGR_APP_VERSION)),span("Coding: Rettenberger, Gregório Hertz & Eher (2017) · Model: Harris et al. (2015)")),
   nav_panel("Single case",value="single",
-    intro("SINGLE CASE","Calculate a VRAG-R result.","Enter the twelve items, explicitly mark unavailable information and click Calculate result. You can then download the result and its inputs as CSV. Consult the manual for case-specific coding decisions."),
+    intro("SINGLE CASE","Calculate a VRAG-R result.","Enter the available information for the twelve items and click Calculate result. Items without information remain marked No information. You can then download the result and its inputs as CSV. The manual provides the full coding rules."),
     layout_columns(col_widths=c(5,7),
       card(class="input-card",card_header(h2("Case details")),
-        hint("Start with empty inputs or load a synthetic example. Missing information is not the same as No or zero."),
+        hint("All items start with No information. Choose the available answers or load an example. Cormier–Lang offence counts start at zero when information is available."),
         accordion(!!!lapply(.vragr_schema,single_group),open="item1",id="single_items"),
         uiOutput("single_validation"),div(class="action-row",actionButton("single_calculate","Calculate result",class="btn-primary"),
           actionButton("single_example","Load example",class="btn-outline-secondary"),actionButton("single_reset","Reset inputs",class="btn-outline-secondary")),
         uiOutput("example_notice")),
       div(class="result-column",uiOutput("single_results"),interpretation_note(),
-        card(card_header(h2("Score and reference distribution")),plotOutput("single_plot",height="300px"),
-          hint("The curve shows the published empirical percentile ranks. It does not assume a normal distribution."),
+        card(card_header(h2("Score and reference distribution")),
+          i18n_select_input("single_plot_type","Display",c("Empirical percentile curve"="empirical","Normal distribution (percentile view)"="normal"),selected="empirical"),
+          plotOutput("single_plot",height="300px"),uiOutput("single_plot_caption"),
           accordion(open=FALSE,accordion_panel("Download plot",
             i18n_select_input("plot_format","Plot format",c("PNG"="png","JPEG"="jpeg","PDF"="pdf","SVG"="svg","TIFF"="tiff")),
             numericInput("plot_width","Width (inches)",8,min=2,max=30),numericInput("plot_height","Height (inches)",4,min=2,max=30),
@@ -82,6 +88,7 @@ ui <- page_navbar(
       card(card_header(h2("What the VRAG-R measures")),
         p("The VRAG-R combines twelve mainly historical factors to assess violent recidivism. The total score identifies one of nine risk categories. Published rates describe groups with comparable scores; an individual assessment also needs other relevant information."),
         p("Violent recidivism includes new charges for specified violent offences and hands-on sexual offences, and qualifying institutional violence. It is not limited to convictions, and is not the same as general reoffending or sexual recidivism alone."),
+        p("Where the sources differ, the German manual takes precedence for coding and interpretation. Differences in the English source are documented in the source review."),
         p("The five- and twelve-year rates concern periods with an opportunity to reoffend. They are cumulative reference-group rates, not annual rates or two separate consecutive periods."),
         manual_link("Outcome definition and development sample",7)),
       card(card_header(h2("Measures and missing information")),
@@ -101,7 +108,8 @@ ui <- page_navbar(
     card(card_header(h2("Model and sources")),
       p(manual_link("Rettenberger, Gregório Hertz & Eher (2017)"),". Die deutsche Version des Violence Risk Appraisal Guide-Revised (VRAG-R). BM-Online, volume 8. Kriminologische Zentralstelle."),
       p(external_link("Harris, Rice, Quinsey & Cormier (2015)","https://doi.org/10.1037/14572-000"),". Violent offenders: Appraising and managing risk (3rd ed.). American Psychological Association."),
-      p("Scoring tables and coding rules were checked against the publicly available German manual. The full Harris (2015) and Hare (2003) manuals were not available for an independent page-by-page review. Source decisions and regression tests are documented in the repository."),
+      p("The German manual (2017) is the governing reference. Harris et al. (2015), including the original scoring appendices and worked examples, was used as an additional check. Both sources agree on weights, categories and final five- and twelve-year rates. Where wording or tables differ, the German manual takes precedence; this also applies to percentiles."),
+      p("The published reference rates are the final norms in Appendix C, not the observed sample rates in Table 5.7. The app does not use substitute variables for missing VRAG-R items. Full PCL-R item assessment still requires the separate Hare manual. Source differences and example inconsistencies are documented in the repository."),
       p(external_link("Source review and implementation decisions","https://github.com/MertenNeumann/VRAGR_Calculator/blob/main/docs/MODEL_AND_SOURCES.md")))),
   nav_panel("About the app",value="about",
     intro("ABOUT","About this app","Find source code, contact links, issue reporting and information on server-side processing here."),
@@ -119,7 +127,7 @@ ui <- page_navbar(
       p("For shinyapps.io, Posit documents hosting on AWS in us-east-1 (USA). The deployment operator must establish the applicable privacy information, retention and lawful operating conditions before processing real case data."),
       p(external_link("Posit security and compliance documentation","https://docs.posit.co/shinyapps.io/guide/security_and_compliance/index.html"))),
     card(card_header(h2("AI-assisted development")),
-      p("OpenAI Codex assisted with revising the code, interface, documentation and software tests. The app calculates results using the documented R code; no AI model is used to score cases. AI assistance does not replace professional review or case-specific assessment."))),
+      p("OpenAI Codex assisted with revising the code, interface, documentation and software tests. The app calculates results using the documented R code; no AI model is used to score cases."))),
   nav_spacer(),nav_item(div(class="language-control",i18n_select_input("language","Language / Sprache",c("English"="en","Deutsch"="de"),selected="en",selectize=FALSE))))
 
 server <- function(input,output,session) {
@@ -137,12 +145,13 @@ server <- function(input,output,session) {
     incomplete <- character()
     values <- setNames(lapply(vragr_fields,function(field) {
       item <- as.integer(strsplit(field,"_",fixed=TRUE)[[1]][2]); value <- input[[paste0("single_",field)]]
-      if(item %in% c(5,8)) {
-        info <- input[[paste0("single_info_",item)]] %||% ""
+      if(item %in% c(5,7,8,9)) {
+        info <- input[[paste0("single_info_",item)]] %||% "missing"
         if(info=="missing") return(NA_real_)
         if(info!="known") incomplete <<- c(incomplete,field)
+        if(item %in% c(5,8) && is.null(value)) value <- 0
       }
-      if(item %in% c(7,9) && isTRUE(input[[paste0("single_missing_",item)]])) return(NA_real_)
+      if((field %in% vragr_categories || item==12) && is.null(value)) value <- "__missing__"
       if(identical(value,"__missing__")) return(NA)
       if(is.null(value) || identical(value,"") || (is.numeric(value) && is.na(value))) {
         incomplete <<- c(incomplete,field); return(NA)
@@ -156,11 +165,14 @@ server <- function(input,output,session) {
     for(field in vragr_fields) {
       value <- if(is.null(data)) NA else data[[field]][1]
       if(field %in% vragr_categories || grepl("^Item_12_",field))
-        updateSelectInput(session,paste0("single_",field),selected=if(is.null(data)) "" else if(is.na(value)) "__missing__" else as.character(value))
-      else updateNumericInput(session,paste0("single_",field),value=if(is.na(value)) NA_real_ else as.numeric(value))
+        updateSelectInput(session,paste0("single_",field),selected=if(is.na(value)) "__missing__" else as.character(value))
+      else updateNumericInput(session,paste0("single_",field),value=if(is.null(data) && grepl("^Item_(5|8)_",field)) 0 else if(is.na(value)) NA_real_ else as.numeric(value))
     }
-    for(i in c(5,8)) updateSelectInput(session,paste0("single_info_",i),selected=if(is.null(data)) "" else "known")
-    for(i in c(7,9)) updateCheckboxInput(session,paste0("single_missing_",i),value=!is.null(data) && is.na(data[[paste0("Item_",i)]][1]))
+    for(i in c(5,7,8,9)) {
+      fields <- vragr_fields[grepl(paste0("^Item_",i,"(_|$)"),vragr_fields)]
+      missing <- is.null(data) || all(is.na(data[1,fields,drop=FALSE]))
+      updateSelectInput(session,paste0("single_info_",i),selected=if(missing) "missing" else "known")
+    }
   }
   observeEvent(input$single_example,{set_case(read_vragr_file(file.path(.app_root,"examples/example-data.csv"),"csv")[1,,drop=FALSE]);example_loaded(TRUE)})
   observeEvent(input$single_reset,{set_case();single_saved(NULL);example_loaded(FALSE)})
@@ -190,7 +202,7 @@ server <- function(input,output,session) {
   output$single_results <- render_ui({
     if(!single_ready()) return(card(class="empty-result",card_header(h2("Your result")),
       h3(if(is.null(single_saved())) "No calculation yet." else "Inputs changed."),
-      p("Complete the inputs and calculate. Previous results remain hidden until recalculation.")))
+      p("At least eight of the twelve items must be scoreable before calculation. Previous results are hidden after scoring inputs change.")))
     saved <- single_saved(); score <- saved$scores
     tile <- function(label,id,value) div(class="probability",span(label),strong(id=id,value))
     card(class="result-card",card_header(h2("VRAG-R result")),
@@ -205,19 +217,20 @@ server <- function(input,output,session) {
   output$single_item_scores <- renderTable({
     req(single_ready());score <- single_saved()$scores
     setNames(data.frame(Item=seq_len(12),Description=vapply(.vragr_schema,function(g) tx(g$en),character(1)),
-      Score=format_number(unname(unlist(score[paste0("Item_",1:12,"_score")])),language())),tx(c("Item","Description","Score")))
+      Score=format_number(unname(unlist(score[paste0("Item_",1:12,"_score")])),language())),tx(c("Item","Description","Item score")))
   },rownames=FALSE)
   output$single_download <- downloadHandler(filename=function(){req(single_ready());vragr_export_filename("Single_case",single_saved()$time)},content=function(file){
     req(single_ready());saved <- single_saved();write.csv(make_vragr_export(saved$data,saved$scores,timestamp=saved$time),file,row.names=FALSE,na="",fileEncoding="UTF-8")
   })
   single_plot <- reactive({
     req(single_ready());score <- single_saved()$scores
-    ggplot(data.frame(Score=-34:46,Percentile=vragr_percentiles),aes(Score,Percentile))+
-      geom_step(colour="#60666c")+geom_vline(xintercept=score$Score,colour="#b22222",linetype=2)+
-      geom_point(data=data.frame(Score=score$Score,Percentile=score$Percentile),colour="#337ab7",size=3)+
-      scale_y_continuous(limits=c(0,100))+labs(x=tx("VRAG-R score"),y=tx("Percentile rank"))+theme_minimal(base_size=13)
+    vragr_result_plot(score,input$single_plot_type %||% "empirical",language())
   })
-  output$single_plot <- renderPlot({validate(need(single_ready(),tx("The plot appears after an up-to-date calculation.")));single_plot()},alt=reactive(tx("Empirical percentile ranks and the current VRAG-R score.")))
+  output$single_plot <- renderPlot({validate(need(single_ready(),tx("The plot appears after an up-to-date calculation.")));single_plot()},
+    alt=reactive(tx(if(identical(input$single_plot_type,"normal")) "Normal curve with the area corresponding to the current percentile shaded." else "Empirical percentile ranks and the current VRAG-R score.")))
+  output$single_plot_caption <- render_ui(hint(if(identical(input$single_plot_type,"normal"))
+    "The normal curve illustrates the percentile rank; it is not a fitted distribution of VRAG-R scores. A percentile of 100 is shown at the right edge of the plot." else
+    "The curve shows the empirical percentile ranks from the German manual (2017)."))
   output$plot_download_control <- render_ui(if(single_ready()) downloadButton("plot_download","Download plot",class="btn-outline-primary"))
   output$plot_download <- downloadHandler(filename=function(){req(single_ready());format <- input$plot_format %||% "png";req(format %in% c("png","jpeg","pdf","svg","tiff"));sub("csv$",format,vragr_export_filename("Plot",single_saved()$time))},content=function(file){
     req(single_ready());format <- input$plot_format %||% "png";req(format %in% c("png","jpeg","pdf","svg","tiff"))

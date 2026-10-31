@@ -1,127 +1,171 @@
-# VRAG-R calculator
+# VRAG-R · Calculator
 
-A Shiny calculator for the **Violence Risk Appraisal Guide-Revised**, using
-the German coding manual by Rettenberger, Gregório Hertz & Eher (2017).
-English is the default interface language; Deutsch can be selected independently
-in each session. Language changes never change scoring, inputs or CSV exports.
+A Shiny application for the **Violence Risk Appraisal Guide—Revised (VRAG-R)**.
+It calculates the total score, risk category, percentile rank and five- and
+twelve-year reference rates of violent recidivism. Coding follows the German
+manual by Rettenberger, Gregório Hertz & Eher (2017), checked against the original
+publication by Harris, Rice, Quinsey & Cormier (2015).
 
-The app provides **Single case**, **Dataset**, **Methods** and **About the app**.
-There is no Explore tab. It is a computation aid for appropriately qualified
-users, not a substitute for the VRAG-R or PCL-R manuals or an individual assessment.
+**English is the default language.** The **Language / Sprache** dropdown switches
+the interface to German and back without clearing inputs, mappings or results.
+Both languages use the same scoring rules and the **German 2017 percentile table**.
+Changing the display language does not select a different model.
 
-## Run locally
+**Where the sources conflict, the German manual takes precedence**, including
+item descriptions, coding rules and interpretation, not only percentiles.
 
-Use R **4.5.3** (see `.R-version`) and the versions in `renv.lock`:
+The app is a computation aid. The linked manuals remain the full references for
+administration, item coding and interpretation.
+
+## Installation and startup
+
+Use **R 4.5.3** and the package versions recorded in `renv.lock`. Run these commands
+from the repository root:
 
 ```sh
 Rscript --vanilla scripts/setup.R
 Rscript scripts/run.R
 ```
 
-Run from the repository root. The default server port is 3838; set `VRAGR_PORT`
-to select another local port. The managed cloud environment already supplies R
-through `/workspace/.vragr-cloud/run.sh`, for example
+The default local server port is 3838; set `VRAGR_PORT` to use another port.
+The setup script preserves the configured proxy and CA trust. No deployment
+credentials or external database are needed for local calculations.
+
+For Linux source installations, development packages may be required, including
+`build-essential`, `gfortran`, `cmake`, `pkg-config`, `zlib1g-dev`, `libuv1-dev`
+and `libx11-dev` on Debian/Ubuntu. The prepared cloud environment uses prebuilt
+packages and provides R through `/workspace/.vragr-cloud/run.sh`, for example
 `/workspace/.vragr-cloud/run.sh Rscript scripts/run.R`.
-No deployment credentials are needed for local use. Setup keeps the inherited
-proxy and CA trust; it does not disable certificate verification.
 
-On Debian/Ubuntu, installing R packages from source may require
-`build-essential`, `gfortran`, `cmake`, `pkg-config`, `zlib1g-dev`,
-`libuv1-dev` and `libx11-dev`. The prepared cloud environment uses verified
-prebuilt packages; its restore succeeds without installing those development
-headers. A fresh source build on another machine has not been verified here.
+The lockfile includes the test dependencies. Keep `snapshot.dev` enabled in
+`renv/settings.json` when running `renv::snapshot()`, so a clean CI restore also
+installs `testthat` and its dependencies.
 
-The lockfile includes development dependencies such as `testthat` and its
-dependencies. Keep `snapshot.dev` enabled in `renv/settings.json` when updating
-it with `renv::snapshot()`, so a fresh CI restore can run the test suite.
+## Interface and calculations
 
-## Workflows
+The four tabs are **Single case**, **Dataset**, **Methods** and **About the app**;
+in German, **Einzelfall**, **Datensatz**, **Methodische Hinweise** and
+**Über die App**. Each tab explains its controls and available actions.
 
-**Single case:** start with empty inputs or explicitly load the synthetic example.
-Mark genuinely unavailable information as such; it is not automatically No or zero.
-Items 5 and 8 have an explicit zero-count action. Expand the twelve item sections,
-check the coding notes, and click **Calculate result**. Results include total,
-risk category, percentile, five-/twelve-year reference rates, missing-item count
-and item scores. Download the input/result CSV or a plot. Editing scoring inputs
-hides the previous result and blocks old download URLs until recalculation.
+**Single case.** Every item initially shows **No information**. Enter the known
+answers, leaving genuinely unavailable information marked as missing. For the
+Cormier–Lang lists, selecting **Information available** starts all offence counts
+at **0**. Review the full list and enter the relevant counts. Switching an item
+back to No information excludes its stored values; returning to Information
+available preserves values already entered. **Reset inputs** returns all items
+to missing and restores the offence counts to zero.
 
-**Dataset:** upload XLSX, comma/semicolon CSV, tab-separated TXT or SPSS SAV
-(10 MiB, at most 100,000 rows). Select the Excel worksheet and decimal mark where
-needed. Map all 75 inputs to distinct columns, check the explicit category
-suggestions, and optionally select a unique pseudonymous case ID. Missing cells
-remain missing; unknown categories are not silently inferred. Invalid rows stay
-in order with status/error explanations and empty result fields. A file with no
-scoreable rows cannot produce a result export. All relevant import/mapping edits
-invalidate the saved result. Downloadable [synthetic examples](examples/example-data.csv)
-show the input format; [input descriptions](R/schema.json) follow the manual.
+Click **Calculate result** after entering enough information to score at least
+eight of the twelve items. The result shows the total, category, percentile,
+five-/twelve-year reference rates, missing-item count and individual item scores.
+Changing scoring inputs hides the result and blocks downloads until recalculation.
+An explicitly loaded example is available for trying the workflow.
 
-Both exports use UTF-8, comma field separators, decimal points and stable English
-headers, independent of UI language. `Prob_5_years` and `Prob_12_years` are 0–1
-numbers; `Percentile` is 0–100. Inputs, item scores, row/optional ID, status,
-version, source filename and UTC calculation time are included. Repeated CSV
-downloads of one calculation retain their filename and bytes. Plot labels follow
-the current display language. UI time is Europe/Berlin with CET/CEST.
+**Dataset.** Upload XLSX, comma- or semicolon-separated CSV, tab-separated TXT, or
+SPSS SAV. The limits are **10 MiB** and **100,000 data rows**. Select the worksheet
+and decimal mark where needed, map all 75 input fields to distinct columns, and
+check the suggested category mappings. An optional pseudonymous ID must be present
+and unique in every row. CSV identifiers are read as text to preserve leading zeroes.
+The downloadable [example dataset](examples/example-data.csv) illustrates the layout.
+
+Blank cells remain missing; unfamiliar category values need an explicit mapping.
+Invalid rows stay in their original order with a status, error explanation and
+empty risk-result fields. A file with no scoreable rows cannot be exported as a
+calculated result. Changes to the file, import settings, mappings or ID selection
+invalidate the saved result. Raw preview values and column names are never translated.
+
+## Measures, plots and exports
+
+The **score** ranges from −34 to +46; the **risk category** ranges from 1 to 9.
+A **percentile** describes the proportion of the reference sample with an equal
+or lower score. It is distinct from the published probability of violent recidivism.
+The five- and twelve-year rates are cumulative from the start of the relevant
+opportunity period, not annual rates or consecutive follow-up periods.
+
+The default plot shows the **empirical percentile curve**. An optional
+**normal-distribution view** restores the earlier shaded-bell-curve presentation
+using the same percentile rank. It is an illustration, not a fitted distribution
+of VRAG-R totals. At percentile 100, the marker is drawn at the finite right edge.
+Plot choice and language do not change calculated values, timestamps or CSV exports.
+The current plot can be downloaded as PNG, JPEG, PDF, SVG or TIFF.
+
+**Both result exports use English headers, UTF-8, comma separators and a decimal
+point**, regardless of interface language. `Prob_5_years` and `Prob_12_years` are
+unrounded 0–1 numbers; `Percentile` is a 0–100 value. Exports include coded inputs,
+item scores, row/optional case ID, status, app/model version, source filename and
+UTC calculation time. Repeated CSV downloads of one calculation retain their
+filename and bytes. The interface displays calculation time in Europe/Berlin.
+
+## Sources and review
+
+- Rettenberger, M., Gregório Hertz, P. & Eher, R. (2017).
+  *Die deutsche Version des Violence Risk Appraisal Guide-Revised (VRAG-R).*
+  [German manual, BM-Online 8](https://krimpub.krimz.de/frontdoor/deliver/index/docId/40/file/bm-online8.pdf).
+- Harris, G. T., Rice, M. E., Quinsey, V. L. & Cormier, C. A. (2015).
+  *Violent offenders: Appraising and managing risk* (3rd ed.).
+  [doi:10.1037/14572-000](https://doi.org/10.1037/14572-000).
+
+Both sources agree on the implemented weights, category boundaries and final
+reference rates. The English book's observed rates in Table 5.7 differ from its
+final norms in Appendix C; the app uses the latter. Its percentile table is
+coarser and partly differs from the German table, which remains the app's reference.
+
+See [Model and sources](docs/MODEL_AND_SOURCES.md) and the
+[original-source review](docs/ORIGINAL_SOURCE_REVIEW.md) for exact pages, numerical
+decisions and inconsistencies in the book's worked examples. No ad hoc correction
+is applied to make an inconsistent example override the general scoring rules.
+The separate Hare manual is still required for full PCL-R item assessment.
 
 ## R API
 
 ```r
 source("VRAGR.R")
 data <- read.csv("examples/example-data.csv", check.names = FALSE)
-result <- vragr(data)                 # validates; stops on invalid input values
-result <- vragr(data, strict = FALSE) # retains invalid rows with empty results
+result <- vragr(data)
+result_with_invalid_rows <- vragr(data, strict = FALSE)
 ```
 
-The core uses base R only, requires the named 75 input columns, and supports
-empty data frames. Genuine missing values use `NA`. Binary fields use `No`/`Yes`,
-Item 2 `None`/`Moderate`/`Severe`, and Item 11
-`None`/`Only14`/`Other`/`Female14`. Counts are non-negative integers; Item 7
-is positive age in completed years; PCL-R fields are 0, 1 or 2. Extra columns
-are ignored by scoring. The compatibility functions `compute_vrag(...)` and
-`compute_vrag_data(...)` keep legacy percentage probabilities; the new API
-uses probabilities between 0 and 1.
+The scoring core uses base R. It requires the 75 named input columns described
+in [the input schema](R/schema.json); extra columns are ignored. Missing values
+are `NA`. Binary fields use `No`/`Yes`, Item 2 uses `None`/`Moderate`/`Severe`,
+and Item 11 uses `None`/`Only14`/`Other`/`Female14`. Counts must be non-negative
+integers, age is in positive completed years, and PCL-R inputs are 0, 1 or 2.
+The legacy `compute_vrag(...)` and `compute_vrag_data(...)` functions keep their
+percentage-valued probabilities; `vragr()` returns probabilities between 0 and 1.
 
-## Sources and limitations
-
-Read [Model and source review](docs/MODEL_AND_SOURCES.md) for all item bands,
-weights, missing-data rules, follow-up definitions, verified discrepancies and
-the explicitly documented midpoint-rounding convention. Rates come from the
-published reference groups; this app does not recalibrate them for another
-population or adjust them for subsequent violence-free time. The German manual
-was checked in full for the implemented rules. The full Harris (2015) and
-Hare (2003) books were not independently reviewed.
-
-## Checks
+## Tests
 
 ```sh
 Rscript tests/run.R
 python3 -m pip install -r tests/requirements-browser.txt
 python3 -m playwright install chromium
-# Start the app in another process before the browser test.
+# Start the app in another process before the browser checks.
 python3 tests/browser_smoke.py
 ```
 
-Set `VRAGR_TEST_URL` for a different local port and `CHROMIUM_PATH` if using an
-existing browser. Screenshots and downloads go to ignored `tests/artifacts/`.
-The R tests include 81 independent manual-derived reference cases, every item
-band and weight, missing and invalid data, all import formats, state/freshness,
-timestamps and a 100,000-row batch. Browser tests exercise EN/DE, independent
-sessions, actual uploads/downloads, custom/raw mappings, stale exports, long
-labels, mobile navigation and widths 390–1920px. All test data are synthetic.
+Set `VRAGR_TEST_URL` for another local port or `CHROMIUM_PATH` for an existing
+browser. Screenshots and downloads go to ignored `tests/artifacts/`.
+The suite covers all 81 possible total scores, every item band and offence
+weight, missing/invalid values, original published examples, imports, default
+answers, state preservation, both plots, export freshness and a 100,000-row batch.
+Browser checks cover both languages, separate sessions, real uploads/downloads,
+long raw labels and mobile/desktop layouts. Test inputs are synthetic or derived
+from published worked examples; no user case records are included.
 
-## Data, deployment and reuse
+## Data processing, contact and reuse
 
-See [Data and deployment](docs/DATA_AND_DEPLOYMENT.md) before using real case data.
-The app processes data on the server. This revision does not deploy the app,
-push Git changes, or publish a cloud snapshot. Existing rsconnect metadata is
-preserved, not treated as deployment authorization.
+Calculations and uploads are processed **on the server**. Read
+[Data and deployment](docs/DATA_AND_DEPLOYMENT.md) for temporary-file handling,
+hosting limits and deployment responsibilities. Existing rsconnect metadata is
+not an automatic deployment instruction. OpenAI Codex assisted with code, interface,
+documentation and tests; no AI model is used for case calculations.
 
-The original repository did not specify a project licence; this revision does
-not assign one. Adapted OGRS components retain their MIT notice in
-[NOTICE](NOTICE) and [LICENSES/OGRS-MIT.txt](LICENSES/OGRS-MIT.txt).
-Manual and instrument rights are separate.
+Report bugs or suggest additions through
+[GitHub Issues](https://github.com/MertenNeumann/VRAGR_Calculator/issues), using
+synthetic examples rather than personal information or original case data.
+The [OGRS 3 calculator](https://mertenneumann.shinyapps.io/OGRS_Calculator/) is
+available separately for general reoffending.
 
-Bug reports and suggestions are welcome through
-[GitHub Issues](https://github.com/MertenNeumann/VRAGR_Calculator/issues).
-Please use synthetic examples and do not post original case data or personal
-information. The [OGRS 3 calculator](https://mertenneumann.shinyapps.io/OGRS_Calculator/)
-is available separately for general reoffending.
+The original repository did not specify a project licence. Adapted OGRS components
+retain their MIT notice in [NOTICE](NOTICE) and [LICENSES/OGRS-MIT.txt](LICENSES/OGRS-MIT.txt).
+Manual and instrument rights remain separate; the supplied book is not redistributed.

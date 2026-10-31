@@ -7,7 +7,7 @@ body { line-height: 1.6; }
 .navbar-brand { display: block; margin: 0; }
 .app-brand { display: flex; gap: 11px; align-items: center; color: var(--vragr-ink); font-weight: 750; letter-spacing: .02em; }
 .app-brand small { display: block; font-size: .67rem; font-weight: 500; letter-spacing: .03em; color: var(--vragr-muted); }
-.brand-symbol { display: grid; place-items: center; background: var(--vragr-accent); color: white; border-radius: 10px; width: 38px; height: 42px; font-size: 1.4rem; }
+.brand-mark { display: block; flex: 0 0 5px; width: 5px; height: 34px; border-radius: 3px; background: var(--vragr-accent); }
 .navbar-nav { gap: 8px; }
 .nav-link { font-weight: 600; border-radius: 8px; padding-inline: 16px !important; }
 .nav-link.active { color: #23527c !important; background: #e7e7e7; }

@@ -14,7 +14,8 @@ field_labels <- function(language="en") {
   unlist(lapply(.vragr_schema, function(g) setNames(vapply(g$fields,function(f) f[[language]], character(1)),vapply(g$fields,`[[`,character(1),"name"))))
 }
 choice_labels <- function(field) {
-  if(field %in% vragr_binary) c("No"="No","Yes"="Yes")
+  if(field == "Item_4") c("Never married"="No","Ever married or cohabited for at least six months"="Yes")
+  else if(field %in% vragr_binary) c("No"="No","Yes"="Yes")
   else if(field == "Item_2") c("No problems"="None","Slight or moderate problems"="Moderate","Severe problems"="Severe")
   else if(field == "Item_11") c("No known hands-on sexual offences"="None","Only against children under 14"="Only14","Other hands-on sexual offences"="Other","At least one female victim aged 14 or older"="Female14")
   else c("0"="0","1"="1","2"="2")

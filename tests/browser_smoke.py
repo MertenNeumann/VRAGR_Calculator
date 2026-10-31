@@ -58,9 +58,39 @@ def run():
             assert not clipped, clipped
             assert page.evaluate("document.documentElement.scrollWidth <= innerWidth + 1")
 
+        def check_case_defaults():
+            page.wait_for_function("""() => {
+              const choices=Array.from(document.querySelectorAll('select[id^="single_Item_"]'));
+              const info=[5,7,8,9].map(i=>document.getElementById('single_info_'+i));
+              const counts=Array.from(document.querySelectorAll('input[id^="single_Item_5_"],input[id^="single_Item_8_"]'));
+              return choices.length===28 && choices.every(x=>x.value==='__missing__') &&
+                info.every(x=>x.value==='missing') && counts.length===45 && counts.every(x=>x.value==='0');
+            }""")
+
         expect(page.locator("#language")).to_have_value("en")
         expect(page.locator("#score_value")).to_have_count(0)
         expect(page.locator('a[data-value="explore"]')).to_have_count(0)
+        expect(page.locator(".brand-symbol")).to_have_count(0)
+        expect(page.locator(".brand-mark")).to_have_attribute("aria-hidden", "true")
+        check_case_defaults()
+        page.locator("#single_calculate").click()
+        expect(page.locator("#single_validation")).to_contain_text("More than four")
+        expect(page.locator("#score_value")).to_have_count(0)
+        page.locator("#single_items .accordion-button").filter(has_text="Item 5 ·").click()
+        choose("single_info_5", "known")
+        expect(page.locator("#single_Item_5_1")).to_be_visible()
+        expect(page.locator("#single_Item_5_1")).to_have_value("0")
+        page.locator("#single_Item_5_1").fill("2")
+        choose("single_info_5", "missing")
+        expect(page.locator("#single_Item_5_1")).not_to_be_visible()
+        choose("single_info_5", "known")
+        expect(page.locator("#single_Item_5_1")).to_have_value("2")
+        language("de")
+        expect(page.locator("#single_Item_5_1")).to_have_value("2")
+        language("en")
+        page.locator("#single_reset").click()
+        check_case_defaults()
+        page.locator("#single_items .accordion-button").filter(has_text="Item 5 ·").click()
         check_controls()
         brand = page.locator(".navbar-brand").bounding_box()
         first_tab = page.locator('a[data-value="single"]').bounding_box()
@@ -76,6 +106,11 @@ def run():
         expect(page.locator("#single_plot img")).to_be_visible()
         original, rows, name = download("single_download", "Single_case")
         assert rows[0]["Item_7"] == "28" and rows[0]["Prob_12_years"] == "0.69"
+        choose("single_plot_type", "normal")
+        expect(page.locator("#single_plot_caption")).to_contain_text("not a fitted distribution")
+        expect(page.locator("#single_plot img")).to_be_visible()
+        normal_csv, _, normal_name = download("single_download", "Single_case")
+        assert normal_csv == original and normal_name == name
         page.locator(".result-column .accordion-button").filter(has_text="Download plot").click()
         for format_ in ("png", "jpeg", "pdf", "svg", "tiff"):
             choose("plot_format", format_)
@@ -90,12 +125,19 @@ def run():
         for value in ("de", "en", "de"):
             language(value)
             expect(page.locator("#score_value")).to_have_text("14")
+            expect(page.locator("#single_plot_type")).to_have_value("normal")
             expect(page.locator("#prob_five")).to_have_text("45,0 %" if value == "de" else "45.0 %")
             page.wait_for_function("expected => {const c=document.getElementById('single_Item_1').selectize;return c.options.No[c.settings.labelField] === expected;}", arg="Nein" if value == "de" else "No")
             repeated, _, repeated_name = download("single_download", "Single_case")
             assert repeated == original and repeated_name == name
             check_controls()
         page.screenshot(path=str(ARTIFACTS / "single-de.png"), full_page=True)
+        expect(page.locator("#single_plot_caption")).to_contain_text("tatsächliche Verteilung")
+        choose("single_plot_type", "empirical")
+        expect(page.locator("#single_plot_caption")).to_contain_text("2017")
+        same_csv, _, same_name = download("single_download", "Single_case")
+        assert same_csv == original and same_name == name
+        page.screenshot(path=str(ARTIFACTS / "single-empirical-de.png"), full_page=True)
         # A direct request to an old download URL is guarded server-side, too.
         old_url = page.locator("#single_download").get_attribute("href")
         choose("single_Item_1", "Yes")
@@ -183,12 +225,22 @@ def run():
             page.locator("#column_mapping .accordion-button").first.click()
             page.locator("#category_mapping .accordion-button").first.click()
 
-        # Independent sessions always start in English with empty inputs.
+        # Independent sessions start in English with explicit missing defaults.
         other = browser.new_page()
         other.goto(URL, wait_until="networkidle")
         expect(other.locator("#language")).to_have_value("en")
         expect(other.locator("#score_value")).to_have_count(0)
+        expect(other.locator("#single_Item_1")).to_have_value("__missing__")
+        expect(other.locator("#single_info_5")).to_have_value("missing")
         other.close()
+        page.locator('a[data-value="methods"]').click()
+        expect(page.locator('a[data-value="methods"]')).to_have_text("Methodische Hinweise")
+        expect(page.locator(".tab-pane.active")).to_contain_text("Originalpublikation")
+        page.locator('a[data-value="about"]').click()
+        expect(page.locator(".tab-pane.active")).to_contain_text("OpenAI Codex")
+        expect(page.locator(".tab-pane.active")).not_to_contain_text("Die KI-Unterstützung ersetzt")
+        page.screenshot(path=str(ARTIFACTS / "about-de.png"),full_page=True)
+        page.locator('a[data-value="batch"]').click()
         for width in (390, 768, 1024, 1280, 1440, 1920):
             page.set_viewport_size({"width": width, "height": 1000})
             check_controls()
@@ -202,7 +254,7 @@ def run():
                 page.screenshot(path=str(ARTIFACTS / f"dataset-de-{width}.png"), full_page=True)
         assert not errors, errors
         browser.close()
-    print("Browser checks passed: EN/DE, independent sessions, calculation, imports/mappings, stable CSV, stale exports, long raw labels and six viewport widths.")
+    print("Browser checks passed: missing/zero defaults, EN/DE, both plots and five formats, source/disclaimer text, independent sessions, calculation, mappings, stable/stale exports and six viewport widths.")
 
 
 if __name__ == "__main__":

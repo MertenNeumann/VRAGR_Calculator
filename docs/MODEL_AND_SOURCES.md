@@ -1,6 +1,8 @@
 # Model and source review
 
-Review date: 31 October 2026. Baseline: `d522a4b7e2fb33995e2df26a58535a4c359bc57f`.
+Review date: 31 October 2026. Current app version: **2.1.0**.
+The initial German-manual review used baseline
+`d522a4b7e2fb33995e2df26a58535a4c359bc57f`.
 
 ## Sources and scope
 
@@ -16,10 +18,15 @@ It is not redistributed in this repository.
 The manual identifies **Harris, Rice, Quinsey & Cormier (2015), Violent
 offenders: Appraising and managing risk, 3rd ed.**, [doi:10.1037/14572-000](https://doi.org/10.1037/14572-000),
 as the model source. Item 12 refers to **Hare (2003), Manual for the
-Psychopathy Checklist-Revised, 2nd ed.** The full books were not available
-for an independent page-by-page review. The public German manual supplies
-the VRAG-R tables, weights and relevant transformations. This review does
-not verify the copyrighted PCL-R diagnostic criteria or certify clinical use.
+Psychopathy Checklist-Revised, 2nd ed.** The supplied original Harris et al.
+book has now been checked against the implementation: Chapter 5, the relevant
+outcome discussion, Appendices A–F and the scoring examples in G/H. The
+separate Hare manual remains unavailable; its full PCL-R diagnostic criteria
+have not been independently checked. The public German manual remains the
+implementation's percentile reference. See the [original-source review](ORIGINAL_SOURCE_REVIEW.md)
+for agreements, table differences and inconsistencies in the book examples.
+**Where the sources conflict, the German manual is authoritative for the app**,
+including item definitions, coding and interpretation, not only percentiles.
 The historical `www.vrag-r.org` endpoint could not be retrieved; no current
 rules were inferred from that unavailable website.
 
@@ -50,15 +57,24 @@ Cormier–Lang weights, in the documented subitem order:
 - Item 5: `7,3,2,5,1,5,5,2,1,1,1,5,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1`.
 - Item 8: `28,7,6,6,7,5,3,2,3,15,12,10,6,6,2,8,5,4`.
 
-These weights and the categorical thresholds in the original implementation
-match the German manual. The UI corrects the property-value boundary to
-**≥ $5,000**, rather than “over $5,000”, in the source's Canadian-dollar
-classification. It does not invent a euro conversion or an automatic mapping
+These weights and categorical thresholds also match Harris et al. (2015),
+Appendix C and Tables A.1/B.1. The UI uses the German manual's property-value
+boundary **≥ $5,000** in its Canadian-dollar classification. Harris Appendix D
+(p. 305) describes the historical Canadian threshold applicable at the offence
+date; its over/under wording is not a new automatic amount rule. The app accepts
+category counts, not monetary amounts. It does not invent a euro conversion or an automatic mapping
 to present German statutes. Attempts, overlapping offences, index offences,
 admissions, self-report and source-quality decisions still require the manual.
 Item 11 includes convincing evidence and the index offence even without
 charges; Items 5 and 8 do not use that broader rule. Item 4's historical
 heterosexual-relationship restriction is stated rather than silently removed.
+The additional review found broader wording for the five-point category in
+English Table B.1: it also lists assault causing bodily harm. The app retains
+the German Table 4 wording for Item_8_6 and translates that wording into English;
+it does not silently add the broader English category. Likewise, the German
+manual's "Mittäterschaft (Delikte in Absprache mit anderen Tätern)" label is
+retained despite the English term "conspiracy". These differences are recorded
+in the original-source review rather than resolved by an English override.
 
 ## Missing information and numerical decisions
 
@@ -98,8 +114,11 @@ the whole item missing. No subitem prorating formula is supplied there by the
 manual. Invalid data (negative or fractional counts, invalid categories,
 out-of-range PCL-R scores) are distinguished from genuine missing information.
 Age must be positive and in completed years; no unsupported age-10/120 bounds
-or automatic eligibility decisions have been introduced. Counts of zero must
-be entered or explicitly set using the zero-count button in the single-case UI.
+or automatic eligibility decisions have been introduced. All single-case items
+initially remain missing. For Items 5 and 8, selecting Information available
+uses the displayed counts, initially zero for every category. The user must
+review these counts; selecting No information excludes them from scoring.
+Blank cells in imported datasets remain missing and are not replaced by zero.
 
 ## Reference measures
 
@@ -123,14 +142,19 @@ Its row printed “17 / 24” is an evident missing minus sign: it lies between
 **−17 → 24**. Values 45 and 46 remain at **100**, a documented monotone
 extension because the cumulative table already reaches 100 at 44. These two
 values are not represented as separately published normative entries.
-The single-case plot uses this empirical distribution, avoiding a Gaussian
-assumption and the former infinite `qnorm(1)` at upper-tail values.
+The default single-case plot shows this empirical cumulative distribution.
+An optional standard-normal curve illustrates the same percentile through its
+normal quantile and shaded area; it does not fit a normal distribution to
+VRAG-R totals. Percentile 100 is shown at the finite right plot boundary,
+avoiding the former infinite `qnorm(1)` at upper-tail values. Changing views
+does not alter calculations, reference values or CSV exports.
 
 Violent recidivism is defined on pp. 7–8; it includes new charges and qualifying
 institutional violence, not simply any reconviction. The reference sample of
 1,261 male offenders and the juvenile, female, jurisdiction and at-risk-period
 limitations are discussed on pp. 7–15. The app does not adjust the baseline
-rates for violence-free years in the community (pp. 14–16), custody length,+treatment or dynamic changes. Neither rates nor percentiles establish an
+rates for violence-free years in the community (pp. 14–16), custody length,
+treatment or dynamic changes. Neither rates nor percentiles establish an
 individual's certain outcome or the accuracy of local calibration.
 
 ## Bugs corrected before the interface refactor
@@ -173,6 +197,9 @@ Additional tests cover every age/category boundary, all 45 Cormier–Lang
 weights, each item coding option, the published prorating example, positive
 and negative missing-score adjustments, invalid values, empty datasets and
 a 100,000-row batch. Workflow/server/browser tests cover imports, raw-value
-preservation, English/German state, stale exports and responsive layouts.
+preservation, missing/zero defaults, English/German state, both plot views,
+stale exports and responsive layouts. Additional independent fixtures from
+Harris et al. cover final norms and the worked-example discrepancy; see the
+[original-source review](ORIGINAL_SOURCE_REVIEW.md).
 
 These are software checks, not an independent clinical validation study.
