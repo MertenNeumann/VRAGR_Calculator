@@ -15,7 +15,7 @@ notice <- function(...,type="info") div(class=paste("notice",paste0("notice-",ty
 intro <- function(kicker,title,text) div(class="section-intro",p(class="eyebrow",kicker),h1(title),p(class="intro-copy",text))
 hint <- function(...) p(class="item-hint",...)
 csv_note <- function() hint("CSV uses UTF-8, comma separators, decimal points and English column names in both languages. Probabilities are exported between 0 and 1. Invalid dataset rows retain their status and error explanations.")
-interpretation_note <- function() notice("These are reference-group rates of violent recidivism, not a certain prediction for an individual. Percentile rank is not a recidivism probability. ",manual_link("Interpretation and limitations",11))
+interpretation_note <- function() notice("These are reference-group rates of violent recidivism. Percentile rank is not a recidivism probability. ",manual_link("Interpretation and limitations",11))
 single_group <- function(group) {
   i <- group$item
   controls <- lapply(group$fields,function(field) {
