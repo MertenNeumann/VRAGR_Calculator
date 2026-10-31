@@ -12,7 +12,7 @@ Both languages use the same scoring rules and the **German 2017 percentile table
 Changing the display language does not select a different model.
 
 **Where the sources conflict, the German manual takes precedence**, including
-item descriptions, coding rules and interpretation, not only percentiles.
+item descriptions, coding rules and interpretation.
 
 The app is a computation aid. The linked manuals remain the full references for
 administration, item coding and interpretation.
@@ -168,4 +168,4 @@ available separately for general reoffending.
 
 This project is licensed under the [MIT License](LICENSE). Adapted OGRS components
 retain their MIT notice in [NOTICE](NOTICE) and [LICENSES/OGRS-MIT.txt](LICENSES/OGRS-MIT.txt).
-Manual and instrument rights remain separate; the supplied book is not redistributed.
+Manual and instrument rights remain separate.
