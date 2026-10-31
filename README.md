@@ -31,6 +31,10 @@ On Debian/Ubuntu, installing R packages from source may require
 prebuilt packages; its restore succeeds without installing those development
 headers. A fresh source build on another machine has not been verified here.
 
+The lockfile includes development dependencies such as `testthat` and its
+dependencies. Keep `snapshot.dev` enabled in `renv/settings.json` when updating
+it with `renv::snapshot()`, so a fresh CI restore can run the test suite.
+
 ## Workflows
 
 **Single case:** start with empty inputs or explicitly load the synthetic example.
