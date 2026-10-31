@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Licensed the project under MIT and aligned the README, package metadata and
+  notices while preserving attribution for adapted OGRS components.
+
 ## 2.1.0 — 2026-10-31
 
 - Checked the implementation against the supplied Harris et al. (2015) original,

@@ -166,6 +166,6 @@ synthetic examples rather than personal information or original case data.
 The [OGRS 3 calculator](https://mertenneumann.shinyapps.io/OGRS_Calculator/) is
 available separately for general reoffending.
 
-The original repository did not specify a project licence. Adapted OGRS components
+This project is licensed under the [MIT License](LICENSE). Adapted OGRS components
 retain their MIT notice in [NOTICE](NOTICE) and [LICENSES/OGRS-MIT.txt](LICENSES/OGRS-MIT.txt).
 Manual and instrument rights remain separate; the supplied book is not redistributed.

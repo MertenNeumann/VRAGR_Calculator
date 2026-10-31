@@ -1,6 +1,5 @@
-The original VRAGR_Calculator repository did not specify a software licence.
-This revision does not grant a new licence for that original code or project.
-Please contact the author to clarify reuse beyond permissions already granted.
+The software and associated documentation in this repository are licensed
+under the MIT License. See LICENSE for the full terms.
 
 Interface styling, in-place translation and parts of the import/state/export
 infrastructure are adapted from Merten Neumann's OGRS_Calculator, version 2.1.2,
