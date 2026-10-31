@@ -19,7 +19,7 @@ administration, item coding and interpretation.
 
 ## Installation and startup
 
-Use **R 4.5.3** and the package versions recorded in `renv.lock`. Run these commands
+Use **R 4.6.2** and the package versions recorded in `renv.lock`. Run these commands
 from the repository root:
 
 ```sh
@@ -33,13 +33,17 @@ credentials or external database are needed for local calculations.
 
 For Linux source installations, development packages may be required, including
 `build-essential`, `gfortran`, `cmake`, `pkg-config`, `zlib1g-dev`, `libuv1-dev`
-and `libx11-dev` on Debian/Ubuntu. The prepared cloud environment uses prebuilt
-packages and provides R through `/workspace/.vragr-cloud/run.sh`, for example
+and `libx11-dev` on Debian/Ubuntu. The prepared cloud environment provides R
+through `/workspace/.vragr-cloud/run.sh`, for example
 `/workspace/.vragr-cloud/run.sh Rscript scripts/run.R`.
 
 The lockfile includes the test dependencies. Keep `snapshot.dev` enabled in
 `renv/settings.json` when running `renv::snapshot()`, so a clean CI restore also
 installs `testthat` and its dependencies.
+
+R and package releases were checked against the official R, CRAN and PyPI
+indexes on **31 October 2026**. The lockfile records the current stable R
+dependencies; browser checks use Playwright **1.64.1**.
 
 ## Interface and calculations
 

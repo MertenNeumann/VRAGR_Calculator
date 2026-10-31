@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Updated to R 4.6.2 and current stable CRAN dependencies, including ggplot2
+  4.0.3 and callr 3.8.0. Updated Playwright to 1.64.1 and aligned
+  setup instructions and CI with the tested versions.
+- Regenerated the lockfile from the installed packages: added S7 0.2.2 and
+  removed five dependencies no longer needed by ggplot2. Verified a clean
+  restore and the scoring/browser checks with the updated runtime.
 - Licensed the project under MIT and aligned the README, package metadata and
   notices while preserving attribution for adapted OGRS components.
 

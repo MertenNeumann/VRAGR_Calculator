@@ -8,11 +8,11 @@ Description: VRAG-R scoring following the German manual by Rettenberger,
     workflows, bilingual presentation and reproducible result exports.
 License: MIT + file LICENSE
 Encoding: UTF-8
-Depends: R (>= 4.5.3)
+Depends: R (>= 4.6.2)
 Imports:
     bslib (>= 0.12.0),
     digest,
-    ggplot2 (>= 3.5.2),
+    ggplot2 (>= 4.0.3),
     haven (>= 2.5.5),
     htmltools,
     jsonlite,
