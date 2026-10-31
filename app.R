@@ -124,7 +124,7 @@ ui <- page_navbar(
     card(card_header(h2("Data processing")),
       p("Calculations and uploads run on the server. The application code does not create a permanent case database or log case details. Inputs and files remain available for processing during the session."),
       p("Temporary uploads are removed on replacement and recognised session end where the server can execute cleanup. Disconnects, crashes, hosting logs and backups have separate limits; immediate or complete deletion is not guaranteed."),
-      p("For shinyapps.io, Posit documents hosting on AWS in us-east-1 (USA). The deployment operator must establish the applicable privacy information, retention and lawful operating conditions before processing real case data."),
+      p("For shinyapps.io, Posit documents hosting on AWS in us-east-1 (USA)."),
       p(external_link("Posit security and compliance documentation","https://docs.posit.co/shinyapps.io/guide/security_and_compliance/index.html"))),
     card(card_header(h2("AI-assisted development")),
       p("OpenAI Codex assisted with revising the code, interface, documentation and software tests. The app calculates results using the documented R code; no AI model is used to score cases."))),
