@@ -1,0 +1,7 @@
+* text=auto eol=lf
+*.csv text eol=lf
+*.xlsx binary
+*.png binary
+
+# Preserve the upstream-generated renv bootstrap formatting.
+renv/activate.R -whitespace

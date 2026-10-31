@@ -1,0 +1,209 @@
+"""End-to-end regression checks with synthetic data only; no remote deployment."""
+import csv
+import io
+import os
+import re
+import shutil
+import tempfile
+from datetime import datetime
+from pathlib import Path
+
+from playwright.sync_api import sync_playwright, expect
+
+ROOT = Path(__file__).resolve().parents[1]
+ARTIFACTS = Path(os.environ.get("VRAGR_ARTIFACTS", ROOT / "tests/artifacts"))
+URL = os.environ.get("VRAGR_TEST_URL", "http://127.0.0.1:3838")
+
+
+def run():
+    ARTIFACTS.mkdir(parents=True, exist_ok=True)
+    errors = []
+    with sync_playwright() as p:
+        browser = p.chromium.launch(
+            executable_path=os.environ.get("CHROMIUM_PATH") or shutil.which("chromium"),
+            headless=True, args=["--no-sandbox", "--disable-dev-shm-usage"])
+        page = browser.new_page(viewport={"width": 1440, "height": 1000}, accept_downloads=True)
+        page.on("pageerror", lambda error: errors.append(str(error)))
+        page.goto(URL, wait_until="networkidle")
+
+        def choose(id_, value):
+            page.wait_for_function("id => {const x=document.getElementById(id);return x && (x.selectize || x.options)}", arg=id_)
+            page.evaluate("""([id,value]) => {const x=document.getElementById(id);
+              if(x.selectize) x.selectize.setValue(value); else {x.value=value;x.dispatchEvent(new Event('change',{bubbles:true}));}}""", [id_, value])
+
+        def language(value):
+            page.locator("#language").select_option(value)
+            expect(page.locator("html")).to_have_attribute("lang", value)
+            expect(page).to_have_title("VRAG-R · Rechner" if value == "de" else "VRAG-R · Calculator")
+
+        def download(control, label="Results"):
+            with page.expect_download() as info:
+                page.locator(f"#{control}").click()
+            file = ARTIFACTS / info.value.suggested_filename
+            info.value.save_as(file)
+            data = file.read_bytes()
+            rows = list(csv.DictReader(io.StringIO(data.decode("utf-8-sig"))))
+            time = datetime.strptime(rows[0]["Calculated_at_UTC"], "%Y-%m-%dT%H:%M:%SZ")
+            assert info.value.suggested_filename == f"VRAGR_{label}_{time:%Y-%m-%d_%H-%M-%S}_UTC.csv"
+            return data, rows, info.value.suggested_filename
+
+        def check_controls():
+            page.wait_for_function("""() => Array.from(document.querySelectorAll('select[data-i18n-options]')).every(x => {
+              const c=x.selectize; return !c || (c.items.length ? !c.$control_input.attr('placeholder') :
+                c.$control_input.attr('placeholder')===c.settings.placeholder);})""")
+            clipped = page.locator(".selectize-input .item").evaluate_all("""nodes => nodes.filter(x => {
+              const r=x.getBoundingClientRect();if(!r.width || !r.height)return false;
+              const p=x.parentElement.getBoundingClientRect();return x.scrollWidth>x.clientWidth+1 || r.right>p.right-18;
+            }).map(x=>x.textContent)""")
+            assert not clipped, clipped
+            assert page.evaluate("document.documentElement.scrollWidth <= innerWidth + 1")
+
+        expect(page.locator("#language")).to_have_value("en")
+        expect(page.locator("#score_value")).to_have_count(0)
+        expect(page.locator('a[data-value="explore"]')).to_have_count(0)
+        check_controls()
+        brand = page.locator(".navbar-brand").bounding_box()
+        first_tab = page.locator('a[data-value="single"]').bounding_box()
+        assert first_tab["x"] - brand["x"] - brand["width"] >= 24
+        page.locator("#single_example").click()
+        # Wait for the input update, not only the example notice.
+        page.wait_for_function("document.getElementById('single_Item_7').value === '28'")
+        page.locator("#single_calculate").click()
+        expect(page.locator("#score_value")).to_have_text("14")
+        expect(page.locator("#category_value")).to_have_text("7")
+        expect(page.locator("#prob_five")).to_have_text("45.0 %")
+        expect(page.locator("#prob_twelve")).to_have_text("69.0 %")
+        expect(page.locator("#single_plot img")).to_be_visible()
+        original, rows, name = download("single_download", "Single_case")
+        assert rows[0]["Item_7"] == "28" and rows[0]["Prob_12_years"] == "0.69"
+        page.locator(".result-column .accordion-button").filter(has_text="Download plot").click()
+        for format_ in ("png", "jpeg", "pdf", "svg", "tiff"):
+            choose("plot_format", format_)
+            page.wait_for_timeout(150)  # Complete the Shiny input round trip before HTTP download.
+            with page.expect_download() as info:
+                page.locator("#plot_download").click()
+            assert info.value.suggested_filename.endswith("." + format_)
+            plot_file = ARTIFACTS / info.value.suggested_filename
+            info.value.save_as(plot_file)
+            assert plot_file.stat().st_size > 1000
+        page.screenshot(path=str(ARTIFACTS / "single-en.png"), full_page=True)
+        for value in ("de", "en", "de"):
+            language(value)
+            expect(page.locator("#score_value")).to_have_text("14")
+            expect(page.locator("#prob_five")).to_have_text("45,0 %" if value == "de" else "45.0 %")
+            page.wait_for_function("expected => {const c=document.getElementById('single_Item_1').selectize;return c.options.No[c.settings.labelField] === expected;}", arg="Nein" if value == "de" else "No")
+            repeated, _, repeated_name = download("single_download", "Single_case")
+            assert repeated == original and repeated_name == name
+            check_controls()
+        page.screenshot(path=str(ARTIFACTS / "single-de.png"), full_page=True)
+        # A direct request to an old download URL is guarded server-side, too.
+        old_url = page.locator("#single_download").get_attribute("href")
+        choose("single_Item_1", "Yes")
+        expect(page.locator("#score_value")).to_have_count(0)
+        response = page.request.get(URL + "/" + old_url.lstrip("/"))
+        assert response.status != 200 or "Calculated_at_UTC" not in response.text()
+        language("en")
+        page.locator("#single_calculate").click()
+        expect(page.locator("#score_value")).to_have_text("9")
+
+        page.locator('a[data-value="batch"]').click()
+        page.locator("#batch_file").set_input_files(ROOT / "examples/example-data.csv")
+        expect(page.locator("#batch_preview")).to_contain_text("001")
+        expect(page.locator("#batch_validation_summary")).to_contain_text("3 scoreable rows")
+        # Check later mapping columns, not just the first input.
+        page.wait_for_function("document.getElementById('column_Item_12_5')?.value === 'Item_12_5'")
+        choose("batch_id", "Case_ID")
+        page.locator("#batch_calculate").click()
+        expect(page.locator("#batch_result_preview")).to_contain_text("46")
+        batch, batch_rows, batch_name = download("batch_download")
+        assert [row["Case_ID"] for row in batch_rows] == ["001", "002", "003"]
+        assert [row["Score"] for row in batch_rows] == ["14", "-34", "46"]
+        for value in ("de", "en", "de"):
+            language(value)
+            again, _, same_name = download("batch_download")
+            assert again == batch and same_name == batch_name
+            check_controls()
+        page.screenshot(path=str(ARTIFACTS / "dataset-de.png"), full_page=True)
+        choose("batch_decimal", ",")
+        expect(page.locator("#batch_download")).to_have_count(0)
+        expect(page.locator("#batch_status")).to_contain_text("nicht mehr aktuell")
+        language("en")
+
+        # Custom values which match translation keys and very long raw headers.
+        with tempfile.TemporaryDirectory() as directory:
+            custom = Path(directory) / "custom.csv"
+            source = list(csv.DictReader((ROOT / "examples/example-data.csv").open()))
+            long_name = "Male_" + "unbroken_raw_column_" * 12
+            for row in source:
+                row[long_name] = "Male"
+                del row["Item_1"]
+            with custom.open("w", newline="") as f:
+                writer = csv.DictWriter(f, fieldnames=list(source[0])); writer.writeheader(); writer.writerows(source)
+            custom_bytes = custom.read_bytes()
+            page.locator("#batch_file").set_input_files(custom)
+            # Wait for the new file's unique header before touching dynamic inputs.
+            page.wait_for_function("name => !!document.getElementById('column_Item_1')?.selectize?.options[name]", arg=long_name)
+            choose("column_Item_1", long_name)
+            page.wait_for_function("document.querySelectorAll('#category_mapping select').length > 0 && Array.from(document.querySelectorAll('#category_mapping label')).some(x=>x.textContent.includes('Male'))")
+            mapping_id = page.locator("#category_mapping .shiny-input-container").filter(has=page.locator("label", has_text="Male")).locator("select").first.get_attribute("id")
+            choose(mapping_id, "Yes")
+            expect(page.locator("#batch_validation_summary")).to_contain_text("3 scoreable rows")
+            # Expand the first column and category accordion to inspect selected labels.
+            page.locator("#column_mapping .accordion-button").first.click()
+            page.locator("#category_mapping .accordion-button").first.click()
+            for value in ("de", "en", "de"):
+                language(value);check_controls()
+                expect(page.locator("#column_Item_1")).to_have_value(long_name)
+                expect(page.locator(f"#{mapping_id}")).to_have_value("Yes")
+                expect(page.locator("#batch_preview")).to_contain_text("Male")
+                assert "Männlich" not in page.locator("#batch_preview").inner_text()
+            page.locator("#batch_calculate").click()
+            _, mapped_rows, _ = download("batch_download")
+            assert mapped_rows[0]["Item_1"] == "Yes"
+
+        # Invalid rows remain in order, with empty scores and original text IDs.
+        with tempfile.TemporaryDirectory() as directory:
+            mixed = Path(directory) / "invalid-row.csv"
+            source = list(csv.DictReader((ROOT / "examples/example-data.csv").open()))
+            source[1]["Item_9"] = "-1"
+            with mixed.open("w", newline="") as f:
+                writer = csv.DictWriter(f, fieldnames=list(source[0]));writer.writeheader();writer.writerows(source)
+            page.locator("#batch_file").set_input_files(mixed)
+            expect(page.locator("#batch_issues")).to_contain_text("Item_9")
+            choose("batch_id", "Case_ID")
+            page.locator("#batch_calculate").click()
+            expect(page.locator("#batch_status")).to_contain_text("invalid-row.csv")
+            _, mixed_rows, _ = download("batch_download")
+            assert mixed_rows[1]["Case_ID"] == "002"
+            assert mixed_rows[1]["Status"] == "not_calculable" and mixed_rows[1]["Score"] == ""
+            # Restore the long-header case for responsive layout regression checks.
+            page.locator("#batch_file").set_input_files({"name": "custom-again.csv", "mimeType": "text/csv", "buffer": custom_bytes})
+            page.wait_for_function("name => !!document.getElementById('column_Item_1')?.selectize?.options[name]", arg=long_name)
+            choose("column_Item_1", long_name)
+            page.locator("#column_mapping .accordion-button").first.click()
+            page.locator("#category_mapping .accordion-button").first.click()
+
+        # Independent sessions always start in English with empty inputs.
+        other = browser.new_page()
+        other.goto(URL, wait_until="networkidle")
+        expect(other.locator("#language")).to_have_value("en")
+        expect(other.locator("#score_value")).to_have_count(0)
+        other.close()
+        for width in (390, 768, 1024, 1280, 1440, 1920):
+            page.set_viewport_size({"width": width, "height": 1000})
+            check_controls()
+            if width == 390:
+                page.locator("button.navbar-toggle, button.navbar-toggler").click()
+                expect(page.locator(".collapsing")).to_have_count(0)
+                page.locator("#language").scroll_into_view_if_needed()
+                expect(page.locator("#language")).to_be_visible()
+                page.screenshot(path=str(ARTIFACTS / "mobile-navigation-de.png"), full_page=False)
+            if width in (390, 1024, 1920):
+                page.screenshot(path=str(ARTIFACTS / f"dataset-de-{width}.png"), full_page=True)
+        assert not errors, errors
+        browser.close()
+    print("Browser checks passed: EN/DE, independent sessions, calculation, imports/mappings, stable CSV, stale exports, long raw labels and six viewport widths.")
+
+
+if __name__ == "__main__":
+    run()

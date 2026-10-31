@@ -1,0 +1,13 @@
+.Rhistory
+.RData
+.Ruserdata
+.DS_Store
+renv/library/
+renv/staging/
+renv/cache/
+renv/python/
+tests/artifacts/
+__pycache__/
+*.pyc
+*.log
+Rplots.pdf

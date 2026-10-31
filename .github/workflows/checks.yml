@@ -1,0 +1,46 @@
+name: Checks
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: '4.5.3'
+          use-public-rspm: true
+      - uses: r-lib/actions/setup-renv@v2
+      - name: R tests
+        run: Rscript tests/run.R
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Browser dependencies
+        run: |
+          python -m pip install -r tests/requirements-browser.txt
+          python -m playwright install --with-deps chromium
+      - name: Browser checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          Rscript scripts/run.R > shiny.log 2>&1 &
+          shiny_pid=$!
+          trap 'kill "$shiny_pid" 2>/dev/null || true' EXIT
+          for attempt in {1..60}; do
+            if curl --fail --silent http://127.0.0.1:3838/ -o /tmp/vragr-ui.html; then break; fi
+            kill -0 "$shiny_pid"
+            sleep 1
+          done
+          test -s /tmp/vragr-ui.html
+          python tests/browser_smoke.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-artifacts
+          path: |
+            tests/artifacts/
+            shiny.log

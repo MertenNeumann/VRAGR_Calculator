@@ -1,655 +1,159 @@
-#####################
-###VRAG-R function###
-#####################
-
-# VRAG-R - Calculator
-# by Merten Neumann
-#
-# based on
-#
-# Rettenberger, M., Hertz, P. G. & Eher, R. (2017). 
-#   Die deutsche Version des Violence Risk Appraisal Guide-Revised (VRAG-R) 
-#   (Elektronische Schriftenreihe der Kriminologischen Zentralstelle e. V. (KrimZ), Band 8). 
-#    Wiesbaden: Kriminologische Zentralstelle e.V.
-#
-# Harris, G. T., Rice, M. E., Quinsey, V. L. & Cormier, C. A. (2015). 
-#   Violent offenders: Appraising and managing risk (3rd ed.). 
-#   Washington: American Psychological Association. https://doi.org/10.1037/14572-000
-
-###For single case###
-compute_vrag <- function(Item_1,
-                         Item_2,
-                         Item_3_1, Item_3_2, Item_3_3, Item_3_4, Item_3_5, Item_3_6,
-                         Item_4,
-                         Item_5_1, Item_5_2, Item_5_3, Item_5_4, Item_5_5, Item_5_6, Item_5_7, Item_5_8, Item_5_9, Item_5_10,
-                         Item_5_11, Item_5_12, Item_5_13, Item_5_14, Item_5_15, Item_5_16, Item_5_17, Item_5_18, Item_5_19, Item_5_20,
-                         Item_5_21, Item_5_22, Item_5_23, Item_5_24, Item_5_25, Item_5_26, Item_5_27,
-                         Item_6,
-                         Item_7,
-                         Item_8_1, Item_8_2, Item_8_3, Item_8_4, Item_8_5, Item_8_6, Item_8_7, Item_8_8, Item_8_9, Item_8_10,
-                         Item_8_11, Item_8_12, Item_8_13, Item_8_14, Item_8_15, Item_8_16, Item_8_17, Item_8_18,
-                         Item_9,
-                         Item_10_1, Item_10_2, Item_10_3, Item_10_4, Item_10_5, Item_10_6, Item_10_7, Item_10_8, Item_10_9, Item_10_10,
-                         Item_10_11, Item_10_12,
-                         Item_11,
-                         Item_12_1, Item_12_2, Item_12_3, Item_12_4,Item_12_5) {
-  
-  #Packages
-  require(dplyr)
-  
-  #Function for missings
-  fill_missing_vrag <- function(Row) {
-    
-    sum_no_missing <- sum(Row, na.rm = TRUE)
-    
-    if(sum_no_missing >=0 ) {Max_Values <- c(2, 4, 4, 1, 5, 4, 2, 4, 6, 5, 3, 6)}else{Max_Values <- c(-2, -3, -2, -1, -3, -2, -7, -2, -2, -2, -2, -6)}
-    
-    idx_missing <- is.na(Row)
-    
-    max_no_missing <- sum(Max_Values[!idx_missing])
-    
-    prop_no_missing <- sum_no_missing/max_no_missing
-    
-    add_missing <- sum(Max_Values[idx_missing]) * prop_no_missing
-    
-    if(sum(idx_missing > 4)) {new_value <- NA}else{new_value <- round(sum_no_missing + add_missing)}
-    
-    new_value
-    
-  }
-  
-  
-  #Item 1
-  Item_1 = ifelse(Item_1 == "Yes", -2, 2)
-  
-  #Item 2
-  Item_2 = case_when(Item_2 == "None" ~ -3, 
-                     Item_2 == "Moderate" ~ 1, 
-                     Item_2 == "Severe" ~ 4)
-  
-  #Item 3
-  Item_3_1 <- ifelse(Item_3_1 == "Yes", 1, 0)
-  Item_3_2 <- ifelse(Item_3_2 == "Yes", 1, 0)
-  Item_3_3 <- ifelse(Item_3_3 == "Yes", 1, 0)
-  Item_3_4 <- ifelse(Item_3_4 == "Yes", 1, 0)
-  Item_3_5 <- ifelse(Item_3_5 == "Yes", 1, 0)
-  Item_3_6 <- ifelse(Item_3_6 == "Yes", 1, 0)
-  
-  Item_3_notNA <- sum(!is.na(c(Item_3_1, Item_3_2, Item_3_3, Item_3_4, Item_3_5, Item_3_6)))
-  
-  Item_3 <- (sum(Item_3_1, Item_3_2, Item_3_3, Item_3_4, Item_3_5, Item_3_6, na.rm = TRUE)/Item_3_notNA)*6
-  Item_3 = case_when(Item_3 < 3 ~ -2,
-                     Item_3 == 3 ~ 0,
-                     Item_3 == 4 ~ 1,
-                     Item_3 > 4 ~ 4)
-  
-  #Item 4
-  Item_4 <- ifelse(Item_4 == "Yes", -1, 1)
-  
-  #Item 5
-  Item_5 <- Item_5_1*7 +
-    Item_5_2*3 +
-    Item_5_3*2 +
-    Item_5_4*5 +
-    Item_5_5*1 +
-    Item_5_6*5 +
-    Item_5_7*5 +
-    Item_5_8*2 +
-    Item_5_9*1 +
-    Item_5_10*1 +
-    Item_5_11*1 +
-    Item_5_12*5 +
-    Item_5_13*1 +
-    Item_5_14*2 +
-    Item_5_15*1 +
-    Item_5_16*1 +
-    Item_5_17*1 +
-    Item_5_18*1 +
-    Item_5_19*1 +
-    Item_5_20*1 +
-    Item_5_21*1 +
-    Item_5_22*1 +
-    Item_5_23*1 +
-    Item_5_24*1 +
-    Item_5_25*1 +
-    Item_5_26*1 +
-    Item_5_27*1
-  
-  Item_5 <- case_when(Item_5 == 0 ~ -3,
-                      Item_5 == 1 | Item_5 == 2 ~ -1,
-                      Item_5 > 2 & Item_5 < 9 ~ 1,
-                      Item_5 > 8 & Item_5 < 18 ~ 3,
-                      Item_5 > 17 ~ 5)
-  
-  #Item 6
-  Item_6 <- ifelse(Item_6 == "Yes", 4, -2)
-  
-  #Item 7
-  Item_7 <- case_when(Item_7 < 26 ~ 2,
-                      Item_7 > 25 & Item_7 < 31 ~ 1,
-                      Item_7 > 30 & Item_7 < 34 ~ -1,
-                      Item_7 > 33 & Item_7 < 39 ~ -2,
-                      Item_7 > 38 & Item_7 < 46 ~ -4,
-                      Item_7 > 45 ~ -7)
-  
-  #Item 8
-  Item_8 <- Item_8_1*28 +
-    Item_8_2*7 +
-    Item_8_3*6 +
-    Item_8_4*6 +
-    Item_8_5*7 +
-    Item_8_6*5 +
-    Item_8_7*3 +
-    Item_8_8*2 +
-    Item_8_9*3 +
-    Item_8_10*15 +
-    Item_8_11*12 +
-    Item_8_12*10 +
-    Item_8_13*6 +
-    Item_8_14*6 +
-    Item_8_15*2 +
-    Item_8_16*8 +
-    Item_8_17*5 +
-    Item_8_18*4
-  
-  Item_8 <- case_when(Item_8 == 0 ~ -2,
-                      Item_8 > 0 & Item_8 < 5 ~ 2,
-                      Item_8 > 4 & Item_8 < 19 ~ 3,
-                      Item_8 > 18 ~ 4)
-  
-  #Item 9
-  Item_9 <- case_when(Item_9 == 0 ~ -2,
-                      Item_9 == 1 ~ 2,
-                      Item_9 == 2 ~ 3,
-                      Item_9 == 3 | Item_9 == 4 ~ 4,
-                      Item_9 > 4 ~ 6)
-  
-  #Item 10
-  Item_10_1 <- ifelse(Item_10_1 == "Yes", 1, 0)
-  Item_10_2 <- ifelse(Item_10_2 == "Yes", 1, 0)
-  Item_10_3 <- ifelse(Item_10_3 == "Yes", 1, 0)
-  Item_10_4 <- ifelse(Item_10_4 == "Yes", 1, 0)
-  Item_10_5 <- ifelse(Item_10_5 == "Yes", 1, 0)
-  Item_10_6 <- ifelse(Item_10_6 == "Yes", 1, 0)
-  Item_10_7 <- ifelse(Item_10_7 == "Yes", 1, 0)
-  Item_10_8 <- ifelse(Item_10_8 == "Yes", 1, 0)
-  Item_10_9 <- ifelse(Item_10_9 == "Yes", 1, 0)
-  Item_10_10 <- ifelse(Item_10_10 == "Yes", 1, 0)
-  Item_10_11 <- ifelse(Item_10_11 == "Yes", 1, 0)
-  Item_10_12 <- ifelse(Item_10_12 == "Yes", 1, 0)
-  
-  Item_10 <- sum(Item_10_1, Item_10_2, Item_10_3, Item_10_4, Item_10_5, Item_10_6,
-                 Item_10_7, Item_10_8, Item_10_9, Item_10_10, Item_10_11, Item_10_12)
-  
-  Item_10 <- case_when(Item_10 == 0 ~ -2,
-                       Item_10 == 1 ~ 0,
-                       Item_10 > 1 & Item_10 < 5 ~ 4,
-                       Item_10 > 4 ~ 5)
-  
-  #Item 11
-  Item_11 <- case_when(Item_11 == "None" ~ -2,
-                       Item_11 == "Only14" ~ -1,
-                       Item_11 == "Other" ~ 2,
-                       Item_11 == "Female14" ~ 3)
-  
-  #Item 12
-  Item_12 <- sum(Item_12_1, Item_12_2, Item_12_3, Item_12_4, Item_12_5, na.rm = TRUE)
-  
-  Item_12_NA <- sum(is.na(c(Item_12_1, Item_12_2, Item_12_3, Item_12_4, Item_12_5)))
-  
-  if(Item_12_NA == 1) {
-    
-    Item_12 <- case_when(Item_12 == 8 ~ 10,
-                         Item_12 == 7 ~ 8.7,
-                         Item_12 == 6 ~ 7.5,
-                         Item_12 == 5 ~ 6.2,
-                         Item_12 == 4 ~ 5.0,
-                         Item_12 == 3 ~ 3.7,
-                         Item_12 == 2 ~ 2.5,
-                         Item_12 == 1 ~ 1.2,
-                         Item_12 == 0 ~ 0)
-    
-  }else{if(Item_12_NA > 1){Item_12 <- NA}}
-  
-  Item_12 <- case_when(Item_12 == 0 ~ -6,
-                       Item_12 >= 1 & Item_12 < 2.5 ~ -3,
-                       Item_12 >= 2.5 & Item_12 < 3.5 ~ 2,
-                       Item_12 >= 3.5 & Item_12 < 7.5 ~ 3,
-                       Item_12 >= 7.5 ~ 6)
-  
-  
-  
-  #Compute Score
-  Item_Scores <- c(Item_1, Item_2, Item_3, 
-                   Item_4, Item_5, Item_6, 
-                   Item_7, Item_8, Item_9, 
-                   Item_10, Item_11, Item_12)
-  
-  Num_Missing <- sum(is.na(Item_Scores))
-  
-  if(any(is.na(Item_Scores))) {
-    
-    Vrag_score <- ifelse(Num_Missing > 4, NA, fill_missing_vrag(Item_Scores))
-    
-  }else{
-    
-    Vrag_score <- sum(Item_Scores)
-    
-  }
-  
-  #Risk classification
-  Risk_Category <- case_when(Vrag_score <= -24 ~ 1,
-                             Vrag_score > -24 & Vrag_score <= -17 ~ 2,
-                             Vrag_score > -17 & Vrag_score <= -11 ~ 3,
-                             Vrag_score > -11 & Vrag_score <= -4 ~ 4,
-                             Vrag_score > -4 & Vrag_score <= 3 ~ 5,
-                             Vrag_score > 3 & Vrag_score <= 11 ~ 6,
-                             Vrag_score > 11 & Vrag_score <= 17 ~ 7,
-                             Vrag_score > 17 & Vrag_score <= 26 ~ 8,
-                             Vrag_score > 26 ~ 9)
-  
-  #Percentile
-  Percentile <- case_when(Vrag_score == -34 ~ 1.2,
-                          Vrag_score == -33 ~ 1.4,
-                          Vrag_score == -32 ~ 1.9,
-                          Vrag_score == -31 ~ 2.6,
-                          Vrag_score == -30 ~ 3.7,
-                          Vrag_score == -29 ~ 4.9,
-                          Vrag_score == -28 ~ 5.7,
-                          Vrag_score == -27 ~ 7.0,
-                          Vrag_score == -26 ~ 8.8,
-                          Vrag_score == -25 ~ 9.6,
-                          Vrag_score == -24 ~ 11.2,
-                          Vrag_score == -23 ~ 13.2,
-                          Vrag_score == -22 ~ 14.5,
-                          Vrag_score == -21 ~ 16,
-                          Vrag_score == -20 ~ 17.7,
-                          Vrag_score == -19 ~ 20.1,
-                          Vrag_score == -18 ~ 21.7,
-                          Vrag_score == -17 ~ 24,
-                          Vrag_score == -16 ~ 26.5,
-                          Vrag_score == -15 ~ 28.4,
-                          Vrag_score == -14 ~ 30.1,
-                          Vrag_score == -13 ~ 31.3,
-                          Vrag_score == -12 ~ 33.2,
-                          Vrag_score == -11 ~ 35.6,
-                          Vrag_score == -10 ~ 36.8,
-                          Vrag_score == -9 ~ 38.5,
-                          Vrag_score == -8 ~ 39.5,
-                          Vrag_score == -7 ~ 41.2,
-                          Vrag_score == -6 ~ 42.2,
-                          Vrag_score == -5 ~ 43.8,
-                          Vrag_score == -4 ~ 45.5,
-                          Vrag_score == -3 ~ 46.5,
-                          Vrag_score == -2 ~ 48.1,
-                          Vrag_score == -1 ~ 49.7,
-                          Vrag_score == 0 ~ 51.4,
-                          Vrag_score == 1 ~ 53.3,
-                          Vrag_score == 2 ~ 54.5,
-                          Vrag_score == 3 ~ 56,
-                          Vrag_score == 4 ~ 57.6,
-                          Vrag_score == 5 ~ 59.2,
-                          Vrag_score == 6 ~ 60.7,
-                          Vrag_score == 7 ~ 62.1,
-                          Vrag_score == 8 ~ 63.9,
-                          Vrag_score == 9 ~ 65,
-                          Vrag_score == 10 ~ 66.1,
-                          Vrag_score == 11 ~ 67.4,
-                          Vrag_score == 12 ~ 69.7,
-                          Vrag_score == 13 ~ 71.7,
-                          Vrag_score == 14 ~ 73.6,
-                          Vrag_score == 15 ~ 75,
-                          Vrag_score == 16 ~ 76.7,
-                          Vrag_score == 17 ~ 78.1,
-                          Vrag_score == 18 ~ 79.8,
-                          Vrag_score == 19 ~ 81.4,
-                          Vrag_score == 20 ~ 83.2,
-                          Vrag_score == 21 ~ 83.9,
-                          Vrag_score == 22 ~ 84.8,
-                          Vrag_score == 23 ~ 86.1,
-                          Vrag_score == 24 ~ 86.9,
-                          Vrag_score == 25 ~ 88.1,
-                          Vrag_score == 26 ~ 89.3,
-                          Vrag_score == 27 ~ 90.4,
-                          Vrag_score == 28 ~ 91.2,
-                          Vrag_score == 29 ~ 92.4,
-                          Vrag_score == 30 ~ 93.6,
-                          Vrag_score == 31 ~ 94.3,
-                          Vrag_score == 32 ~ 95.1,
-                          Vrag_score == 33 ~ 95.8,
-                          Vrag_score == 34 ~ 96.6,
-                          Vrag_score == 35 ~ 97.3,
-                          Vrag_score == 36 ~ 97.7,
-                          Vrag_score == 37 ~ 98,
-                          Vrag_score == 38 ~ 98.2,
-                          Vrag_score == 39 ~ 98.8,
-                          Vrag_score == 40 ~ 99,
-                          Vrag_score == 41 ~ 99.5,
-                          Vrag_score == 42 ~ 99.8,
-                          Vrag_score == 43 ~ 99.9,
-                          Vrag_score == 44 ~ 100,
-                          Vrag_score == 45 ~ 100,
-                          Vrag_score == 46 ~ 100)
-  
-  #Probability for recedivism
-  Prob_5 <- case_when(Risk_Category == 1 ~ 9,
-                      Risk_Category == 2 ~ 12,
-                      Risk_Category == 3 ~ 16,
-                      Risk_Category == 4 ~ 20,
-                      Risk_Category == 5 ~ 26,
-                      Risk_Category == 6 ~ 34,
-                      Risk_Category == 7 ~ 45,
-                      Risk_Category == 8 ~ 58,
-                      Risk_Category == 9 ~ 76)
-  
-  Prob_12 <- case_when(Risk_Category == 1 ~ 15,
-                       Risk_Category == 2 ~ 24,
-                       Risk_Category == 3 ~ 33,
-                       Risk_Category == 4 ~ 42,
-                       Risk_Category == 5 ~ 51,
-                       Risk_Category == 6 ~ 60,
-                       Risk_Category == 7 ~ 69,
-                       Risk_Category == 8 ~ 78,
-                       Risk_Category == 9 ~ 87)
-  
-  #Export
-  Out_list <- list("Score" = Vrag_score,
-                   "Risk Category" = Risk_Category,
-                   "Percentile" = Percentile,
-                   "Probability for violent recidivism after 5 years" = Prob_5,
-                   "Probability for violent recidivism after 12 years" = Prob_12,
-                   "Number of missing items" = Num_Missing,
-                   "Items" = list(
-                     "Item 1" = Item_1,
-                     "Item 2" = Item_2,
-                     "Item 3" = Item_3,
-                     "Item 4" = Item_4,
-                     "Item 5" = Item_5,
-                     "Item 6" = Item_6,
-                     "Item 7" = Item_7,
-                     "Item 8" = Item_8,
-                     "Item 9" = Item_9,
-                     "Item 10" = Item_10,
-                     "Item 11" = Item_11,
-                     "Item 12" = Item_12))
-  
-  Out_list
-  
+# VRAG-R scoring independent of Shiny and external packages.
+# Rettenberger, Gregorio Hertz & Eher (2017), printed pp. 11-12, 20-42, 45-46.
+# Source decisions and limitations: docs/MODEL_AND_SOURCES.md.
+VRAGR_APP_VERSION <- "2.0.0"
+VRAGR_MODEL_VERSION <- "VRAG-R / German manual 2017"
+VRAGR_MANUAL_URL <- "https://krimpub.krimz.de/frontdoor/deliver/index/docId/40/file/bm-online8.pdf"
+vragr_fields <- c("Item_1", "Item_2", paste0("Item_3_", 1:6), "Item_4", paste0("Item_5_", 1:27),
+  "Item_6", "Item_7", paste0("Item_8_", 1:18), "Item_9", paste0("Item_10_", 1:12), "Item_11", paste0("Item_12_", 1:5))
+vragr_binary <- c("Item_1", paste0("Item_3_", 1:6), "Item_4", "Item_6", paste0("Item_10_", 1:12))
+vragr_categories <- c(vragr_binary, "Item_2", "Item_11")
+vragr_weights_5 <- c(7,3,2,5,1,5,5,2,1,1,1,5,1,2,1,1,1,1,1,1,1,1,1,1,1,1,1)
+vragr_weights_8 <- c(28,7,6,6,7,5,3,2,3,15,12,10,6,6,2,8,5,4)
+vragr_min <- c(-2,-3,-2,-1,-3,-2,-7,-2,-2,-2,-2,-6)
+vragr_max <- c(2,4,4,1,5,4,2,4,6,5,3,6)
+# Empirical cumulative distribution (Table 2), not a normal distribution.
+vragr_percentiles <- c(1.2,1.4,1.9,2.6,3.7,4.9,5.7,7,8.8,9.6,11.2,13.2,14.5,16,
+  17.7,20.1,21.7,24,26.5,28.4,30.1,31.3,33.2,35.6,36.8,38.5,39.5,41.2,42.2,43.8,
+  45.5,46.5,48.1,49.7,51.4,53.3,54.5,56,57.6,59.2,60.7,62.1,63.9,65,66.1,67.4,
+  69.7,71.7,73.6,75,76.7,78.1,79.8,81.4,83.2,83.9,84.8,86.1,86.9,88.1,89.3,90.4,
+  91.2,92.4,93.6,94.3,95.1,95.8,96.6,97.3,97.7,98,98.2,98.8,99,99.5,99.8,99.9,100,100,100)
+vragr_choices <- function(field) {
+  if (field %in% vragr_binary) c("No", "Yes")
+  else if (field == "Item_2") c("None", "Moderate", "Severe")
+  else if (field == "Item_11") c("None", "Only14", "Other", "Female14") else character()
 }
-
-###For data set###
+vragr_round <- function(x) sign(x) * floor(abs(x) + 0.5)
+vragr_empty <- function(n = 0L) {
+  out <- as.data.frame(setNames(replicate(18, rep(NA_real_, n), simplify = FALSE),
+    c("Score", "Risk_Category", "Percentile", "Prob_5_years", "Prob_12_years", "Missing_items", paste0("Item_", 1:12, "_score"))))
+  out$Status <- rep("not_calculable", n); out$Error <- rep("", n); out
+}
+validate_vragr <- function(data) {
+  if (!is.data.frame(data) || any(!vragr_fields %in% names(data)) || anyDuplicated(names(data)))
+    stop("Provide all 75 uniquely named VRAG-R input columns.", call. = FALSE)
+  issues <- data.frame(row = integer(), field = character(), message = character())
+  for (field in vragr_fields) {
+    x <- data[[field]]; present <- !is.na(x)
+    if (field %in% vragr_categories) {
+      bad <- present & !as.character(x) %in% vragr_choices(field)
+      message <- "Select a recognised category or explicitly mark information as missing."
+    } else {
+      number <- suppressWarnings(as.numeric(as.character(x)))
+      bad <- present & (!is.finite(number) | number < 0 | number != floor(number))
+      if (grepl("^Item_12_", field)) bad <- bad | (present & !number %in% 0:2)
+      if (field == "Item_7") bad <- bad | (present & number <= 0)
+      message <- if (grepl("^Item_12_", field)) "Use 0, 1 or 2, or mark information as missing." else if (field == "Item_7")
+        "Enter a positive age in completed years, or mark information as missing." else "Enter a non-negative whole number, or mark information as missing."
+    }
+    if (any(bad)) issues <- rbind(issues, data.frame(row = which(bad), field = field, message = message))
+  }
+  issues
+}
+vragr_total <- function(items) {
+  stopifnot(length(items) == 12L)
+  missing <- is.na(items)
+  if (sum(missing) > 4L) return(NA_real_)
+  score <- sum(items, na.rm = TRUE)
+  if (!any(missing)) return(score)
+  extrema <- if (score >= 0) vragr_max else vragr_min
+  vragr_round(score + score / sum(extrema[!missing]) * sum(extrema[missing]))
+}
+vragr <- function(data, strict = TRUE) {
+  issues <- validate_vragr(data)
+  if (strict && nrow(issues)) stop(paste("Invalid VRAG-R inputs:", paste(unique(issues$field), collapse = ", ")), call. = FALSE)
+  n <- nrow(data); out <- vragr_empty(n)
+  if (!n) return(out)
+  clean <- data[vragr_fields]
+  for (field in setdiff(vragr_fields, vragr_categories)) clean[[field]] <- suppressWarnings(as.numeric(as.character(clean[[field]])))
+  for (field in vragr_categories) clean[[field]] <- as.character(clean[[field]])
+  block <- function(item, count) as.matrix(clean[paste0("Item_",item,"_",seq_len(count))])
+  band <- function(x, limits, values) values[findInterval(x,limits)+1L]
+  binary <- function(field,no,yes) ifelse(is.na(clean[[field]]),NA_real_,ifelse(clean[[field]]=="Yes",yes,no))
+  lookup <- function(field,table) unname(table[as.character(clean[[field]])])
+  a3 <- block(3,6)
+  raw3 <- vragr_round(6 * rowSums(a3=="Yes",na.rm=TRUE) / rowSums(!is.na(a3)))
+  raw10 <- rowSums(block(10,12)=="Yes")
+  pcl <- block(12,5); known12 <- rowSums(!is.na(pcl))
+  raw12 <- ifelse(known12 >= 4L,rowSums(pcl,na.rm=TRUE)*5/known12,NA_real_)
+  items <- cbind(binary("Item_1",2,-2),lookup("Item_2",c(None=-3,Moderate=1,Severe=4)),
+    band(raw3,c(3,4,5),c(-2,0,1,4)),binary("Item_4",1,-1),
+    band(drop(block(5,27) %*% vragr_weights_5),c(1,3,9,18),c(-3,-1,1,3,5)),
+    binary("Item_6",-2,4),band(clean$Item_7,c(26,31,34,39,46),c(2,1,-1,-2,-4,-7)),
+    band(drop(block(8,18) %*% vragr_weights_8),c(1,5,19),c(-2,2,3,4)),
+    band(clean$Item_9,c(1,2,3,5),c(-2,2,3,4,6)),band(raw10,c(1,2,5),c(-2,0,4,5)),
+    lookup("Item_11",c(None=-2,Only14=-1,Other=2,Female14=3)),band(raw12,c(1,2.5,3.5,7.5),c(-6,-3,2,3,6)))
+  missing <- is.na(items); total <- rowSums(items,na.rm=TRUE); count <- rowSums(missing)
+  pos_den <- drop((!missing) %*% vragr_max); neg_den <- drop((!missing) %*% vragr_min)
+  extra <- ifelse(total >= 0,total/pos_den*drop(missing %*% vragr_max),total/neg_den*drop(missing %*% vragr_min))
+  total <- ifelse(count==0,total,vragr_round(total+extra)); total[count>4] <- NA_real_
+  category <- findInterval(total,c(-23,-16,-10,-3,4,12,18,27))+1L
+  out$Score <- total; out$Risk_Category <- category; out$Percentile <- vragr_percentiles[total+35L]
+  out$Prob_5_years <- c(.09,.12,.16,.20,.26,.34,.45,.58,.76)[category]
+  out$Prob_12_years <- c(.15,.24,.33,.42,.51,.60,.69,.78,.87)[category]
+  out$Missing_items <- count; out[paste0("Item_",1:12,"_score")] <- as.data.frame(items)
+  out$Status <- ifelse(is.na(total),"not_calculable","calculated")
+  out$Error[is.na(total)] <- "More than four of the twelve items are missing."
+  if(nrow(issues)) {
+    invalid <- unique(issues$row); out[invalid,1:18] <- NA_real_; out$Status[invalid] <- "not_calculable"
+    messages <- split(paste(issues$field,issues$message,sep=": "),issues$row)
+    out$Error[as.integer(names(messages))] <- vapply(messages,paste,character(1),collapse=" | ")
+  }
+  out
+}
+# Legacy API: positional or named 75-field calls; probability values in percent.
+compute_vrag <- function(Item_1, Item_2, Item_3_1, Item_3_2, Item_3_3, Item_3_4, Item_3_5,
+    Item_3_6, Item_4, Item_5_1, Item_5_2, Item_5_3, Item_5_4, Item_5_5,
+    Item_5_6, Item_5_7, Item_5_8, Item_5_9, Item_5_10, Item_5_11, Item_5_12,
+    Item_5_13, Item_5_14, Item_5_15, Item_5_16, Item_5_17, Item_5_18, Item_5_19,
+    Item_5_20, Item_5_21, Item_5_22, Item_5_23, Item_5_24, Item_5_25, Item_5_26,
+    Item_5_27, Item_6, Item_7, Item_8_1, Item_8_2, Item_8_3, Item_8_4,
+    Item_8_5, Item_8_6, Item_8_7, Item_8_8, Item_8_9, Item_8_10, Item_8_11,
+    Item_8_12, Item_8_13, Item_8_14, Item_8_15, Item_8_16, Item_8_17, Item_8_18,
+    Item_9, Item_10_1, Item_10_2, Item_10_3, Item_10_4, Item_10_5, Item_10_6,
+    Item_10_7, Item_10_8, Item_10_9, Item_10_10, Item_10_11, Item_10_12, Item_11,
+    Item_12_1, Item_12_2, Item_12_3, Item_12_4, Item_12_5) {
+  values <- mget(vragr_fields, envir=environment(), inherits=FALSE)
+  if (length(values) != 75L || any(lengths(values) != 1L)) stop("Supply 75 scalar inputs.", call. = FALSE)
+  if (is.null(names(values))) names(values) <- vragr_fields
+  if (!setequal(names(values), vragr_fields)) stop("Use the documented VRAG-R input names.", call. = FALSE)
+  result <- vragr(as.data.frame(values[vragr_fields], stringsAsFactors = FALSE))
+  list(Score=result$Score, "Risk Category"=result$Risk_Category, Percentile=result$Percentile,
+    "Probability for violent recidivism after 5 years"=100*result$Prob_5_years,
+    "Probability for violent recidivism after 12 years"=100*result$Prob_12_years,
+    "Number of missing items"=result$Missing_items,
+    Items=setNames(as.list(result[1,paste0("Item_",1:12,"_score")]), paste("Item",1:12)))
+}
 compute_vrag_data <- function(Data, Outcome = "Score", Shiny_Progress = FALSE) {
-  
-  #Packages
-  if(Shiny_Progress) {require("shiny")}
-  
-  #Helper function for one row
-  compute_vrag_row <- function(Row, Outcome) {
-    
-    Res_raw <- compute_vrag(Row[, 1],
-                            Row[, 2],
-                            Row[, 3], Row[, 4], Row[, 5], Row[, 6], Row[, 7], Row[, 8],
-                            Row[, 9],
-                            Row[, 10], Row[, 11], Row[, 12], Row[, 13],Row[, 14], Row[, 15], Row[, 16], Row[, 17], Row[, 18], Row[, 19],
-                            Row[, 20], Row[, 21], Row[, 22], Row[, 23], Row[, 24], Row[, 25], Row[, 26], Row[, 27], Row[, 28], Row[, 29],
-                            Row[, 30], Row[, 31], Row[, 32], Row[, 33], Row[, 34], Row[, 35], Row[, 36],
-                            Row[, 37],
-                            Row[, 38],
-                            Row[, 39], Row[, 40], Row[, 41], Row[, 42], Row[, 43], Row[, 44], Row[, 45], Row[, 46], Row[, 47], Row[, 48],
-                            Row[, 49], Row[, 50], Row[, 51], Row[, 52], Row[, 53], Row[, 54], Row[, 55], Row[, 56],
-                            Row[, 57],
-                            Row[, 58], Row[, 59], Row[, 60], Row[, 61], Row[, 62], Row[, 63], Row[, 64], Row[, 65], Row[, 66], Row[, 67],
-                            Row[, 68], Row[, 69],
-                            Row[, 70],
-                            Row[, 71], Row[, 72], Row[, 73], Row[, 74],Row[, 75])
-    
-    Res <- Res_raw[[Outcome]]
-    
-    Res
-    
+  if (!all(vragr_fields %in% names(Data))) {
+    if (ncol(Data) != 75L) stop("Provide all 75 VRAG-R input columns.", call. = FALSE)
+    names(Data) <- vragr_fields
   }
-  
-  Out_Data <- Data
-  
-  #Computation with progress bar
-  if(Shiny_Progress) {
-    
-    withProgress(message = "Computing", value = 0, {
-      
-      N <- nrow(Data)*length(Outcome)
-      Inc_idx <- ceiling(N/100)
-      Run <- 0
-      
-      
-      for(j in Outcome) {
-        
-        Out_Data[, j] <- rep(NA, times = nrow(Data))
-        
-        for(i in 1:nrow(Data)) {
-          
-          Out_Data[i, j] <- compute_vrag_row(Data[i,], j)
-          
-          Run <- Run + 1
-          
-          if(Run %% Inc_idx == 0) {setProgress(value = Run/N, detail = paste(as.character(round((Run/N) * 100, digits = 0)), "%"))}
-          
-        }
-      }
-      
-    })
-    
-    
-  }else{
-    
-    #Computation without progress bar
-    for(j in Outcome) {
-      
-      Out_Data[, j] <- rep(NA, times = nrow(Data))
-      
-      for(i in 1:nrow(Data)) {
-        
-        Out_Data[i, j] <- compute_vrag_row(Data[i,], j)
-        
-      }
-    }
-  }
-  
-  #Export
-  Out_Data
-  
+  result <- vragr(Data)
+  aliases <- c(Score="Score", "Risk Category"="Risk_Category", Percentile="Percentile",
+    "Probability for violent recidivism after 5 years"="Prob_5_years", "Probability for violent recidivism after 12 years"="Prob_12_years", "Number of missing items"="Missing_items")
+  if (any(!Outcome %in% names(aliases))) stop("Unknown outcome requested.", call. = FALSE)
+  for (field in Outcome) Data[[field]] <- result[[aliases[[field]]]] * if (grepl("^Probability", field)) 100 else 1
+  Data
 }
 
-
-###Test functions###
-
-#Simulate single case
-sim_vrag_case <- function() {
-  
-  require(MASS)
-  
-  Item_1 <<- sample(c("No", "Yes"), size = 1, replace = TRUE)
-  Item_2 <<- sample(c("None", "Moderate", "Severe"), size = 1, replace = TRUE)
-  Item_3_1 <<- sample(c("No", "Yes"), size = 1, replace = TRUE)
-  Item_3_2 <<- sample(c("No", "Yes"), size = 1, replace = TRUE)
-  Item_3_3 <<- sample(c("No", "Yes"), size = 1, replace = TRUE)
-  Item_3_4 <<- sample(c("No", "Yes"), size = 1, replace = TRUE)
-  Item_3_5 <<- sample(c("No", "Yes"), size = 1, replace = TRUE)
-  Item_3_6 <<- sample(c("No", "Yes"), size = 1, replace = TRUE)
-  Item_4 <<- sample(c("No", "Yes"), size = 1, replace = TRUE)
-  Item_5_1 <<- rnegbin(1, mu = 0.3, theta = 5)
-  Item_5_2 <<- rnegbin(1, mu = 0.3, theta = 5)
-  Item_5_3 <<- rnegbin(1, mu = 0.3, theta = 5)
-  Item_5_4 <<- rnegbin(1, mu = 0.3, theta = 5)
-  Item_5_5 <<- rnegbin(1, mu = 0.3, theta = 5)
-  Item_5_6 <<- rnegbin(1, mu = 0.3, theta = 5)
-  Item_5_7 <<- rnegbin(1, mu = 0.3, theta = 5)
-  Item_5_8 <<- rnegbin(1, mu = 0.3, theta = 5)
-  Item_5_9 <<- rnegbin(1, mu = 0.3, theta = 5)
-  Item_5_10 <<- rnegbin(1, mu = 0.3, theta = 5)
-  Item_5_11 <<- rnegbin(1, mu = 0.3, theta = 5)
-  Item_5_12 <<- rnegbin(1, mu = 0.3, theta = 5)
-  Item_5_13 <<- rnegbin(1, mu = 0.3, theta = 5)
-  Item_5_14 <<- rnegbin(1, mu = 0.3, theta = 5)
-  Item_5_15 <<- rnegbin(1, mu = 0.3, theta = 5)
-  Item_5_16 <<- rnegbin(1, mu = 0.3, theta = 5)
-  Item_5_17 <<- rnegbin(1, mu = 0.3, theta = 5)
-  Item_5_18 <<- rnegbin(1, mu = 0.3, theta = 5)
-  Item_5_19 <<- rnegbin(1, mu = 0.3, theta = 5)
-  Item_5_20 <<- rnegbin(1, mu = 0.3, theta = 5)
-  Item_5_21 <<- rnegbin(1, mu = 0.3, theta = 5)
-  Item_5_22 <<- rnegbin(1, mu = 0.3, theta = 5)
-  Item_5_23 <<- rnegbin(1, mu = 0.3, theta = 5)
-  Item_5_24 <<- rnegbin(1, mu = 0.3, theta = 5)
-  Item_5_25 <<- rnegbin(1, mu = 0.3, theta = 5)
-  Item_5_26 <<- rnegbin(1, mu = 0.3, theta = 5)
-  Item_5_27 <<- rnegbin(1, mu = 0.3, theta = 5)
-  Item_6 <<- sample(c("No", "Yes"), size = 1, replace = TRUE)
-  Item_7 <<- sample(c(14:90), size = 1, replace = TRUE)
-  Item_8_1 <<- rnegbin(1, mu = 0.3, theta = 5)
-  Item_8_2 <<- rnegbin(1, mu = 0.3, theta = 5)
-  Item_8_3 <<- rnegbin(1, mu = 0.3, theta = 5)
-  Item_8_4 <<- rnegbin(1, mu = 0.3, theta = 5)
-  Item_8_5 <<- rnegbin(1, mu = 0.3, theta = 5)
-  Item_8_6 <<- rnegbin(1, mu = 0.3, theta = 5)
-  Item_8_7 <<- rnegbin(1, mu = 0.3, theta = 5)
-  Item_8_8 <<- rnegbin(1, mu = 0.3, theta = 5)
-  Item_8_9 <<- rnegbin(1, mu = 0.3, theta = 5)
-  Item_8_10 <<- rnegbin(1, mu = 0.3, theta = 5)
-  Item_8_11 <<- rnegbin(1, mu = 0.3, theta = 5)
-  Item_8_12 <<- rnegbin(1, mu = 0.3, theta = 5)
-  Item_8_13 <<- rnegbin(1, mu = 0.3, theta = 5)
-  Item_8_14 <<- rnegbin(1, mu = 0.3, theta = 5)
-  Item_8_15 <<- rnegbin(1, mu = 0.3, theta = 5)
-  Item_8_16 <<- rnegbin(1, mu = 0.3, theta = 5)
-  Item_8_17 <<- rnegbin(1, mu = 0.3, theta = 5)
-  Item_8_18 <<- rnegbin(1, mu = 0.3, theta = 5)
-  Item_9 <<- rnegbin(1, mu = 0.3, theta = 5)
-  Item_10_1 <<- sample(c("No", "Yes"), size = 1, replace = TRUE)
-  Item_10_2 <<- sample(c("No", "Yes"), size = 1, replace = TRUE)
-  Item_10_3 <<- sample(c("No", "Yes"), size = 1, replace = TRUE)
-  Item_10_4 <<- sample(c("No", "Yes"), size = 1, replace = TRUE)
-  Item_10_5 <<- sample(c("No", "Yes"), size = 1, replace = TRUE)
-  Item_10_6 <<- sample(c("No", "Yes"), size = 1, replace = TRUE)
-  Item_10_7 <<- sample(c("No", "Yes"), size = 1, replace = TRUE)
-  Item_10_8 <<- sample(c("No", "Yes"), size = 1, replace = TRUE)
-  Item_10_9 <<- sample(c("No", "Yes"), size = 1, replace = TRUE)
-  Item_10_10 <<- sample(c("No", "Yes"), size = 1, replace = TRUE)
-  Item_10_11 <<- sample(c("No", "Yes"), size = 1, replace = TRUE)
-  Item_10_12 <<- sample(c("No", "Yes"), size = 1, replace = TRUE)
-  Item_11 <<- sample(c("None", "Only14", "Other", "Female14"), size = 1, replace = TRUE)
-  Item_12_1 <<- sample(c(0:2), size = 1, replace = TRUE)
-  Item_12_2 <<- sample(c(0:2), size = 1, replace = TRUE)
-  Item_12_3 <<- sample(c(0:2), size = 1, replace = TRUE)
-  Item_12_4 <<- sample(c(0:2), size = 1, replace = TRUE)
-  Item_12_5 <<- sample(c(0:2), size = 1, replace = TRUE)
-  
-}
-
-#Simulate data set
+# Legacy toy-data helpers, not calibrated offender populations or test oracles.
 sim_vrag_data <- function(N, prob_missing = 0.1) {
-  
-  require(MASS)
-  
-  infuse_missing <- function(Data, p_missing = 0.1) {
-    
-    Missing_Mat <- matrix(data = rep(FALSE, times = prod(dim(Data))), 
-                          nrow = nrow(Data),
-                          ncol = ncol(Data))
-    
-    for(j in 1:ncol(Missing_Mat)) {
-      
-      Missing_Mat[ ,j] <- sample(c(FALSE, TRUE), 
-                                 size = nrow(Missing_Mat), 
-                                 replace = TRUE, 
-                                 prob = c(1 - p_missing, p_missing))
-      
-    }
-    
-    Data[Missing_Mat] <- NA
-    
-    Data
-    
-    
-  }
-  
-  Out_Data <- data.frame(Item_1 = sample(c("No", "Yes"), size = N, replace = TRUE),
-                         Item_2 = sample(c("None", "Moderate", "Severe"), size = N, replace = TRUE),
-                         Item_3_1 = sample(c("No", "Yes"), size = N, replace = TRUE),
-                         Item_3_2 = sample(c("No", "Yes"), size = N, replace = TRUE),
-                         Item_3_3 = sample(c("No", "Yes"), size = N, replace = TRUE),
-                         Item_3_4 = sample(c("No", "Yes"), size = N, replace = TRUE),
-                         Item_3_5 = sample(c("No", "Yes"), size = N, replace = TRUE),
-                         Item_3_6 = sample(c("No", "Yes"), size = N, replace = TRUE),
-                         Item_4 = sample(c("No", "Yes"), size = N, replace = TRUE),
-                         Item_5_1 = rnegbin(N, mu = 0.3, theta = 5),
-                         Item_5_2 = rnegbin(N, mu = 0.3, theta = 5),
-                         Item_5_3 = rnegbin(N, mu = 0.3, theta = 5),
-                         Item_5_4 = rnegbin(N, mu = 0.3, theta = 5),
-                         Item_5_5 = rnegbin(N, mu = 0.3, theta = 5),
-                         Item_5_6 = rnegbin(N, mu = 0.3, theta = 5),
-                         Item_5_7 = rnegbin(N, mu = 0.3, theta = 5),
-                         Item_5_8 = rnegbin(N, mu = 0.3, theta = 5),
-                         Item_5_9 = rnegbin(N, mu = 0.3, theta = 5),
-                         Item_5_10 = rnegbin(N, mu = 0.3, theta = 5),
-                         Item_5_11 = rnegbin(N, mu = 0.3, theta = 5),
-                         Item_5_12 = rnegbin(N, mu = 0.3, theta = 5),
-                         Item_5_13 = rnegbin(N, mu = 0.3, theta = 5),
-                         Item_5_14 = rnegbin(N, mu = 0.3, theta = 5),
-                         Item_5_15 = rnegbin(N, mu = 0.3, theta = 5),
-                         Item_5_16 = rnegbin(N, mu = 0.3, theta = 5),
-                         Item_5_17 = rnegbin(N, mu = 0.3, theta = 5),
-                         Item_5_18 = rnegbin(N, mu = 0.3, theta = 5),
-                         Item_5_19 = rnegbin(N, mu = 0.3, theta = 5),
-                         Item_5_20 = rnegbin(N, mu = 0.3, theta = 5),
-                         Item_5_21 = rnegbin(N, mu = 0.3, theta = 5),
-                         Item_5_22 = rnegbin(N, mu = 0.3, theta = 5),
-                         Item_5_23 = rnegbin(N, mu = 0.3, theta = 5),
-                         Item_5_24 = rnegbin(N, mu = 0.3, theta = 5),
-                         Item_5_25 = rnegbin(N, mu = 0.3, theta = 5),
-                         Item_5_26 = rnegbin(N, mu = 0.3, theta = 5),
-                         Item_5_27 = rnegbin(N, mu = 0.3, theta = 5),
-                         Item_6 = sample(c("No", "Yes"), size = N, replace = TRUE),
-                         Item_7 = sample(c(14:90), size = N, replace = TRUE),
-                         Item_8_1 = rnegbin(N, mu = 0.3, theta = 5),
-                         Item_8_2 = rnegbin(N, mu = 0.3, theta = 5),
-                         Item_8_3 = rnegbin(N, mu = 0.3, theta = 5),
-                         Item_8_4 = rnegbin(N, mu = 0.3, theta = 5),
-                         Item_8_5 = rnegbin(N, mu = 0.3, theta = 5),
-                         Item_8_6 = rnegbin(N, mu = 0.3, theta = 5),
-                         Item_8_7 = rnegbin(N, mu = 0.3, theta = 5),
-                         Item_8_8 = rnegbin(N, mu = 0.3, theta = 5),
-                         Item_8_9 = rnegbin(N, mu = 0.3, theta = 5),
-                         Item_8_10 = rnegbin(N, mu = 0.3, theta = 5),
-                         Item_8_11 = rnegbin(N, mu = 0.3, theta = 5),
-                         Item_8_12 = rnegbin(N, mu = 0.3, theta = 5),
-                         Item_8_13 = rnegbin(N, mu = 0.3, theta = 5),
-                         Item_8_14 = rnegbin(N, mu = 0.3, theta = 5),
-                         Item_8_15 = rnegbin(N, mu = 0.3, theta = 5),
-                         Item_8_16 = rnegbin(N, mu = 0.3, theta = 5),
-                         Item_8_17 = rnegbin(N, mu = 0.3, theta = 5),
-                         Item_8_18 = rnegbin(N, mu = 0.3, theta = 5),
-                         Item_9 = rnegbin(N, mu = 0.3, theta = 5),
-                         Item_10_1 = sample(c("No", "Yes"), size = N, replace = TRUE),
-                         Item_10_2 = sample(c("No", "Yes"), size = N, replace = TRUE),
-                         Item_10_3 = sample(c("No", "Yes"), size = N, replace = TRUE),
-                         Item_10_4 = sample(c("No", "Yes"), size = N, replace = TRUE),
-                         Item_10_5 = sample(c("No", "Yes"), size = N, replace = TRUE),
-                         Item_10_6 = sample(c("No", "Yes"), size = N, replace = TRUE),
-                         Item_10_7 = sample(c("No", "Yes"), size = N, replace = TRUE),
-                         Item_10_8 = sample(c("No", "Yes"), size = N, replace = TRUE),
-                         Item_10_9 = sample(c("No", "Yes"), size = N, replace = TRUE),
-                         Item_10_10 = sample(c("No", "Yes"), size = N, replace = TRUE),
-                         Item_10_11 = sample(c("No", "Yes"), size = N, replace = TRUE),
-                         Item_10_12 = sample(c("No", "Yes"), size = N, replace = TRUE),
-                         Item_11 = sample(c("None", "Only14", "Other", "Female14"), size = N, replace = TRUE),
-                         Item_12_1 = sample(c(0:2), size = N, replace = TRUE),
-                         Item_12_2 = sample(c(0:2), size = N, replace = TRUE),
-                         Item_12_3 = sample(c(0:2), size = N, replace = TRUE),
-                         Item_12_4 = sample(c(0:2), size = N, replace = TRUE),
-                         Item_12_5 = sample(c(0:2), size = N, replace = TRUE))
-  
-  Out_Data <- infuse_missing(Out_Data, p_missing = prob_missing)
-  
-  Out_Data
-  
+  if(length(N)!=1L || !is.finite(N) || N<0 || N!=floor(N)) stop("N must be a non-negative whole number.",call.=FALSE)
+  if(length(prob_missing)!=1L || !is.finite(prob_missing) || prob_missing<0 || prob_missing>1) stop("prob_missing must be between 0 and 1.",call.=FALSE)
+  data <- setNames(lapply(vragr_fields,function(field) {
+    if(field %in% vragr_categories) sample(vragr_choices(field),N,replace=TRUE)
+    else if(field=="Item_7") sample(14:90,N,replace=TRUE)
+    else if(grepl("^Item_12_",field)) sample(0:2,N,replace=TRUE)
+    else stats::rnbinom(N,size=5,mu=.3)
+  }),vragr_fields)
+  data <- as.data.frame(data,stringsAsFactors=FALSE)
+  for(field in vragr_fields) data[[field]][stats::runif(N)<prob_missing] <- NA
+  data
+}
+sim_vrag_case <- function() {
+  data <- sim_vrag_data(1L,prob_missing=0)
+  # Preserve the original helper's global item bindings for existing scripts.
+  list2env(as.list(data),envir=.GlobalEnv)
+  invisible(data)
 }

@@ -1,0 +1,38 @@
+test_that("single-case results need an explicit action and a current complete snapshot", {
+  withr::local_dir(root)
+  app_env <- new.env(parent=globalenv());source("app.R",local=app_env)
+  inputs <- as.list(minimum_case());names(inputs) <- paste0("single_",names(inputs))
+  inputs <- c(inputs,setNames(list("known","known"),c("single_info_5","single_info_8")))
+  shiny::testServer(app_env$server, {
+    expect_false(single_ready())
+    do.call(session$setInputs,inputs);expect_false(single_ready())
+    session$setInputs(single_calculate=1);expect_true(single_ready());expect_equal(single_saved()$scores$Score,-34)
+    time <- single_saved()$time
+    session$setInputs(language="de");expect_true(single_ready());expect_identical(single_saved()$time,time)
+    session$setInputs(single_Item_7=25);expect_false(single_ready())
+    session$setInputs(single_calculate=2);expect_true(single_ready());expect_equal(single_saved()$scores$Score,-25)
+    session$setInputs(single_Item_7=NA_real_);expect_false(single_ready());session$setInputs(single_calculate=3)
+    expect_false(single_ready())
+  })
+})
+test_that("all dataset specification changes invalidate exports, but language does not", {
+  withr::local_dir(root);app_env <- new.env(parent=globalenv());source("app.R",local=app_env)
+  data <- minimum_case();file <- tempfile(fileext=".csv");write.csv(data,file,row.names=FALSE)
+  shiny::testServer(app_env$server, {
+    session$setInputs(batch_file=data.frame(name="synthetic.csv",size=file.size(file),type="text/csv",datapath=file),batch_format="csv",batch_sheet=1,batch_decimal=".",batch_id="")
+    columns <- setNames(as.list(vragr_fields),paste0("column_",vragr_fields));do.call(session$setInputs,columns)
+    mapping <- setNames(lapply(vragr_categories,function(f) as.character(data[[f]])),vapply(vragr_categories,function(f) mapping_input_id(f,f,as.character(data[[f]])),character(1)))
+    do.call(session$setInputs,mapping)
+    expect_equal(batch_prepared()$scores$Score,-34)
+    session$setInputs(batch_calculate=1);expect_true(batch_ready());snapshot <- batch_saved()$export
+    session$setInputs(language="de");expect_true(batch_ready());expect_identical(batch_saved()$export,snapshot)
+    session$setInputs(batch_decimal=",");expect_false(batch_ready())
+    session$setInputs(batch_decimal=".",batch_sheet=2);expect_false(batch_ready())
+    session$setInputs(batch_sheet=1,batch_format="auto");expect_false(batch_ready())
+    session$setInputs(batch_format="csv",column_Item_1="Item_2");expect_false(batch_ready())
+    session$setInputs(column_Item_1="Item_1",batch_id="Item_1");expect_false(batch_ready())
+    session$setInputs(batch_id="");expect_true(batch_ready())
+    do.call(session$setInputs,setNames(list("No"),mapping_input_id("Item_1","Item_1","Yes")))
+    expect_false(batch_ready())
+  })
+})

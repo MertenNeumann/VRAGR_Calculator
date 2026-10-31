@@ -1,0 +1,497 @@
+[
+  {
+    "item": 1,
+    "en": "Lived with both biological parents to age 16",
+    "de": "Zusammenleben mit beiden biologischen Eltern bis zum 16. Lebensjahr",
+    "help_en": "Except separation due to a parent’s death. Consult the manual for traumatic and non-traumatic separations.",
+    "help_de": "Ausnahme: Trennung durch Tod eines Elternteils. Traumatische und nicht-traumatische Trennungen sind nach dem Manual zu unterscheiden.",
+    "page": 21,
+    "fields": [
+      {
+        "name": "Item_1",
+        "en": "Lived with both biological parents to age 16",
+        "de": "Zusammenleben mit beiden biologischen Eltern bis zum 16. Lebensjahr"
+      }
+    ]
+  },
+  {
+    "item": 2,
+    "en": "Elementary school maladjustment",
+    "de": "Schulische Verhaltensprobleme",
+    "help_en": "Up to and including eighth grade; use information from sources beyond self-report where required.",
+    "help_de": "Bis einschließlich der 8. Jahrgangsstufe; soweit gefordert weitere Quellen neben dem Selbstbericht heranziehen.",
+    "page": 23,
+    "fields": [
+      {
+        "name": "Item_2",
+        "en": "Elementary school maladjustment",
+        "de": "Schulische Verhaltensprobleme"
+      }
+    ]
+  },
+  {
+    "item": 3,
+    "en": "History of alcohol or drug problems",
+    "de": "Alkohol- oder Drogenprobleme in der Vergangenheit",
+    "help_en": "At least one known subitem is needed. The raw score is prorated to six subitems and rounded to the nearest integer.",
+    "help_de": "Mindestens ein Problembereich muss bekannt sein. Der Rohwert wird auf sechs Problembereiche hochgerechnet und auf die nächste ganze Zahl gerundet.",
+    "page": 25,
+    "fields": [
+      {
+        "name": "Item_3_1",
+        "en": "Alcohol problem before age 18",
+        "de": "Alkoholproblem vor dem 18. Lebensjahr"
+      },
+      {
+        "name": "Item_3_2",
+        "en": "Illegal drug problem before age 18",
+        "de": "Problem mit illegalen Drogen vor dem 18. Lebensjahr"
+      },
+      {
+        "name": "Item_3_3",
+        "en": "Alcohol involved in a prior offense",
+        "de": "Alkohol in einem Vordelikt involviert"
+      },
+      {
+        "name": "Item_3_4",
+        "en": "Illegal drug involved in a prior offense",
+        "de": "Illegale Drogen in einem Vordelikt involviert"
+      },
+      {
+        "name": "Item_3_5",
+        "en": "Alcohol involved in current offense",
+        "de": "Alkohol im Rahmen des Index-Delikts involviert"
+      },
+      {
+        "name": "Item_3_6",
+        "en": "Illegal drug involved in current offense",
+        "de": "Illegale Drogen im Rahmen des Index-Delikts involviert"
+      }
+    ]
+  },
+  {
+    "item": 4,
+    "en": "Marital status at the index offence",
+    "de": "Ehestatus zur Zeit des Index-Delikts",
+    "help_en": "Ever married or cohabited for at least six months at the index offence. The cited manual restricts this coding to heterosexual relationships.",
+    "help_de": "Jemals verheiratet oder mindestens sechs Monate in eheähnlicher Beziehung zur Zeit des Index-Delikts. Das zitierte Manual beschränkt diese Kodierung auf heterosexuelle Beziehungen.",
+    "page": 27,
+    "fields": [
+      {
+        "name": "Item_4",
+        "en": "Marital status at the index offence",
+        "de": "Ehestatus zur Zeit des Index-Delikts"
+      }
+    ]
+  },
+  {
+    "item": 5,
+    "en": "Nonviolent criminal history",
+    "de": "Kriminelle Vergangenheit: nicht-gewalttätige Straftaten",
+    "help_en": "Count charges or convictions before the index offence using Cormier–Lang weights. Exclude the index offence. A missing count makes this whole item missing.",
+    "help_de": "Anklagen oder Verurteilungen vor dem Index-Delikt nach Cormier–Lang zählen. Das Index-Delikt ausschließen. Ein unbekannter Häufigkeitswert macht das gesamte Item fehlend.",
+    "page": 28,
+    "fields": [
+      {
+        "name": "Item_5_1",
+        "en": "Robbery (bank, store)",
+        "de": "Raub (Bank, Geschäft)"
+      },
+      {
+        "name": "Item_5_2",
+        "en": "Robbery (purse snatching)",
+        "de": "Raub (Handtaschendiebstahl)"
+      },
+      {
+        "name": "Item_5_3",
+        "en": "Threatening (uttering threats)",
+        "de": "Bedrohen (Drohungen äußern)"
+      },
+      {
+        "name": "Item_5_4",
+        "en": "Arson and fire setting (church, house, barn)",
+        "de": "Brandstiftung (Kirche, Haus, Scheune)"
+      },
+      {
+        "name": "Item_5_5",
+        "en": "Arson and fire setting (garbage can), false alarm of fire",
+        "de": "Brandstiftung (Mülleimer), Missbrauch von Notrufen"
+      },
+      {
+        "name": "Item_5_6",
+        "en": "Theft / possession of stolen property ≥ $5,000",
+        "de": "Schwerer Diebstahl / Besitz gestohlenen Eigentums ≥ $5.000"
+      },
+      {
+        "name": "Item_5_7",
+        "en": "Mischief to property ≥ $5,000",
+        "de": "Sachbeschädigung ≥ $5.000"
+      },
+      {
+        "name": "Item_5_8",
+        "en": "Break and enter and commit indictable offense (burglary)",
+        "de": "Einbruch und Diebstahl"
+      },
+      {
+        "name": "Item_5_9",
+        "en": "Break and enter (includes break and enter with intent to commit an offense)",
+        "de": "Einbruch mit der Intention einer weiteren Straftat"
+      },
+      {
+        "name": "Item_5_10",
+        "en": "Theft (includes possession of stolen property under a value of $5,000)",
+        "de": "Diebstahl / Besitz gestohlenen Eigentums < $5.000"
+      },
+      {
+        "name": "Item_5_11",
+        "en": "Mischief to public or private property under a value of $5,000",
+        "de": "Sachbeschädigung < $5.000"
+      },
+      {
+        "name": "Item_5_12",
+        "en": "Fraud (extortion, embezzlement)",
+        "de": "Betrug (Erpressung, Untreue)"
+      },
+      {
+        "name": "Item_5_13",
+        "en": "Fraud (forged check, impersonation)",
+        "de": "Betrug (gefälschter Scheck, falsche Identität)"
+      },
+      {
+        "name": "Item_5_14",
+        "en": "Indecent exposure",
+        "de": "Exhibitionistische Handlungen"
+      },
+      {
+        "name": "Item_5_15",
+        "en": "Causing a disturbance",
+        "de": "Ruhestörung"
+      },
+      {
+        "name": "Item_5_16",
+        "en": "Conspiracy",
+        "de": "Mittäterschaft"
+      },
+      {
+        "name": "Item_5_17",
+        "en": "Contributing to juvenile delinquency",
+        "de": "Beteiligung an Jugenddelinquenz"
+      },
+      {
+        "name": "Item_5_18",
+        "en": "Criminal negligence, criminal harassment",
+        "de": "Strafbare Fahrlässigkeit, Belästigung"
+      },
+      {
+        "name": "Item_5_19",
+        "en": "Criminal trespass, trespassing at night",
+        "de": "Hausfriedensbruch"
+      },
+      {
+        "name": "Item_5_20",
+        "en": "Dangerous driving, impaired driving (driving while intoxicated)",
+        "de": "Gefährlicher Eingriff in den Straßenverkehr / Intoxikation"
+      },
+      {
+        "name": "Item_5_21",
+        "en": "Fail to provide necessities of life",
+        "de": "Vorenthalten lebensnotwendiger Güter gegenüber Schutzbedürftigen"
+      },
+      {
+        "name": "Item_5_22",
+        "en": "Obstructing peace officer (including resisting arrest), obstructing justice",
+        "de": "Widerstand gegen Vollstreckungsbeamte"
+      },
+      {
+        "name": "Item_5_23",
+        "en": "Possession of housebreaking tools",
+        "de": "Besitz von Gegenständen zum Wohnungseinbruch"
+      },
+      {
+        "name": "Item_5_24",
+        "en": "Possession/misuse/careless use of/carrying a prohibited or restricted weapon",
+        "de": "Verstoß gegen das Waffengesetz"
+      },
+      {
+        "name": "Item_5_25",
+        "en": "Procuring or living on the avails of the prostitution of another person",
+        "de": "Zuhälterei"
+      },
+      {
+        "name": "Item_5_26",
+        "en": "Trafficking in narcotics",
+        "de": "Handel mit illegalen Substanzen"
+      },
+      {
+        "name": "Item_5_27",
+        "en": "Wearing a disguise with the intent to commit an offense",
+        "de": "Tragen einer Maskierung mit Straftatintention"
+      }
+    ]
+  },
+  {
+    "item": 6,
+    "en": "Failure on conditional release",
+    "de": "Bewährungsversagen",
+    "help_en": "Includes breaches of conditions and new charges, including the index offence, while on conditional release.",
+    "help_de": "Einschließlich Auflagenverstößen und neuer Anklagen während Bewährungs- oder Probezeit, auch aufgrund des Index-Delikts.",
+    "page": 33,
+    "fields": [
+      {
+        "name": "Item_6",
+        "en": "Failure on conditional release",
+        "de": "Bewährungsversagen"
+      }
+    ]
+  },
+  {
+    "item": 7,
+    "en": "Age at the index offence",
+    "de": "Alter zum Zeitpunkt des Index-Delikts",
+    "help_en": "Completed years at the offence, not at assessment or release. For a series, use age at the first offence.",
+    "help_de": "Alter in vollendeten Jahren bei Tatbegehung, nicht bei Begutachtung oder Entlassung. Bei einer Serie zählt das erste Delikt.",
+    "page": 34,
+    "fields": [
+      {
+        "name": "Item_7",
+        "en": "Age at the index offence",
+        "de": "Alter zum Zeitpunkt des Index-Delikts"
+      }
+    ]
+  },
+  {
+    "item": 8,
+    "en": "Violent criminal history",
+    "de": "Kriminelle Vergangenheit: gewalttätige Straftaten",
+    "help_en": "Count charges or convictions before the index offence using Cormier–Lang weights. Apply the manual’s rules for attempts and overlapping offences.",
+    "help_de": "Anklagen oder Verurteilungen vor dem Index-Delikt nach Cormier–Lang zählen. Die Regeln zu Versuchen und Überschneidungen im Manual beachten.",
+    "page": 35,
+    "fields": [
+      {
+        "name": "Item_8_1",
+        "en": "Homicide (murder, manslaughter, criminal negligence causing death)",
+        "de": "Tötungsdelikt (Mord, Totschlag, fahrlässige Tötung)"
+      },
+      {
+        "name": "Item_8_2",
+        "en": "Attempted murder",
+        "de": "Versuchter Mord"
+      },
+      {
+        "name": "Item_8_3",
+        "en": "Kidnapping, abduction, and forcible confinement",
+        "de": "(Kindes-)Entführung, Menschenraub, Freiheitsberaubung"
+      },
+      {
+        "name": "Item_8_4",
+        "en": "Aggravated assault, choking, administering a noxious substance",
+        "de": "Schwere Körperverletzung, Würgen, Verabreichen eines Schadstoffes"
+      },
+      {
+        "name": "Item_8_5",
+        "en": "Wounding, assault CBH with intent to wound",
+        "de": "Verletzen / Angriff mit Verletzungsabsicht"
+      },
+      {
+        "name": "Item_8_6",
+        "en": "Assault CBH, Criminal negligence CBH, Impaired driving CBH",
+        "de": "Fahrlässige Körperverletzung / durch Fahren unter Alkohol- oder Drogeneinfluss"
+      },
+      {
+        "name": "Item_8_7",
+        "en": "Assault with a weapon",
+        "de": "Angriff mit einer Waffe"
+      },
+      {
+        "name": "Item_8_8",
+        "en": "Assault, assaulting a peace officer",
+        "de": "Körperverletzung / Angriff eines Polizei- oder Vollstreckungsbeamten"
+      },
+      {
+        "name": "Item_8_9",
+        "en": "Threatening with a weapon, dangerous use of/pointing firearm",
+        "de": "Drohung mit einer Waffe / gefährliche Verwendung einer Waffe"
+      },
+      {
+        "name": "Item_8_10",
+        "en": "Aggravated sexual assault, sexual assault CBH",
+        "de": "Schwerer sexueller Angriff / mit physischer Verletzung"
+      },
+      {
+        "name": "Item_8_11",
+        "en": "Sexual assault with a weapon",
+        "de": "Sexueller Angriff mit einer Waffe"
+      },
+      {
+        "name": "Item_8_12",
+        "en": "Sexual assault, gross indecency (vaginal or anal penetration; victim forced to fellate offender)",
+        "de": "Sexueller Angriff (vaginale/anale Penetration; erzwungener Oralverkehr am Täter)"
+      },
+      {
+        "name": "Item_8_13",
+        "en": "Sexual assault (attempted rape, indecent assault)",
+        "de": "Sexueller Angriff (versuchte Vergewaltigung, sexuelle Nötigung)"
+      },
+      {
+        "name": "Item_8_14",
+        "en": "Gross indecency (offender fellates or performs cunnilingus on victim)",
+        "de": "Sexueller Angriff (erzwungener Oralverkehr am Opfer)"
+      },
+      {
+        "name": "Item_8_15",
+        "en": "Sexual assault (sexual interference, invitation to sexual touching)",
+        "de": "Sexueller Angriff (sexuelle Belästigung; Einladung bei Personen <16 Jahre)"
+      },
+      {
+        "name": "Item_8_16",
+        "en": "Armed robbery (bank, store)",
+        "de": "Bewaffneter Raub (Bank, Geschäft)"
+      },
+      {
+        "name": "Item_8_17",
+        "en": "Robbery with violence",
+        "de": "Raub mit Gewaltanwendung"
+      },
+      {
+        "name": "Item_8_18",
+        "en": "Armed robbery (not a bank or store)",
+        "de": "Bewaffneter Raub (keine Bank oder Geschäft)"
+      }
+    ]
+  },
+  {
+    "item": 9,
+    "en": "Prior admissions to correctional institutions",
+    "de": "Anzahl früherer Inhaftierungen",
+    "help_en": "Admissions lasting at least one day; exclude transfers and overnight detention unless part of a longer remand or sentence.",
+    "help_de": "Aufnahmen von mindestens einem Tag; keine Überstellungen oder reine Übernachthaft, außer als Teil längerer Untersuchungshaft oder Haftstrafe.",
+    "page": 39,
+    "fields": [
+      {
+        "name": "Item_9",
+        "en": "Prior admissions to correctional institutions",
+        "de": "Anzahl früherer Inhaftierungen"
+      }
+    ]
+  },
+  {
+    "item": 10,
+    "en": "Conduct disorder before age 15",
+    "de": "Verhaltensstörung vor dem 15. Lebensjahr",
+    "help_en": "Behaviour before age 15. If any indicator is unknown, this app conservatively treats the whole item as missing; it does not invent an item-level prorating rule.",
+    "help_de": "Verhalten vor dem 15. Lebensjahr. Ist ein Indikator unbekannt, behandelt diese App vorsichtig das gesamte Item als fehlend; sie erfindet keine anteilige Itembewertung.",
+    "page": 40,
+    "fields": [
+      {
+        "name": "Item_10_1",
+        "en": "Repeated truancy",
+        "de": "Wiederholtes Schulschwänzen"
+      },
+      {
+        "name": "Item_10_2",
+        "en": "School suspension or expulsion",
+        "de": "Vorübergehender Schulausschluss oder dauerhafter Schulverweis"
+      },
+      {
+        "name": "Item_10_3",
+        "en": "Delinquency brought to the attention of juvenile court",
+        "de": "Delinquentes Verhalten mit Kenntnis des Jugendgerichts"
+      },
+      {
+        "name": "Item_10_4",
+        "en": "Running away from home at least twice",
+        "de": "Zumindest zweimal von zu Hause weggelaufen"
+      },
+      {
+        "name": "Item_10_5",
+        "en": "Persistent lying",
+        "de": "Persistentes Lügen"
+      },
+      {
+        "name": "Item_10_6",
+        "en": "Repeated sexual intercourse within a casual relationship",
+        "de": "Wiederholter Geschlechtsverkehr in unverbindlicher Beziehung"
+      },
+      {
+        "name": "Item_10_7",
+        "en": "Repeated drunkenness or substance abuse",
+        "de": "Wiederholte Trunkenheit oder Drogenkonsum"
+      },
+      {
+        "name": "Item_10_8",
+        "en": "Thefts",
+        "de": "Diebstähle"
+      },
+      {
+        "name": "Item_10_9",
+        "en": "Vandalism",
+        "de": "Vandalismus"
+      },
+      {
+        "name": "Item_10_10",
+        "en": "School grades markedly below expectations in relation to estimated or known IQ",
+        "de": "Schulnoten deutlich unter der nach IQ erwarteten Leistung"
+      },
+      {
+        "name": "Item_10_11",
+        "en": "Chronic violations at home and/or school other than truancy",
+        "de": "Chronische Regelverletzungen zu Hause / in der Schule (ohne Schulschwänzen)"
+      },
+      {
+        "name": "Item_10_12",
+        "en": "Involvement in fights",
+        "de": "Beteiligung an Prügeleien"
+      }
+    ]
+  },
+  {
+    "item": 11,
+    "en": "History of sexual offences",
+    "de": "Sexualdelikte in der Vorgeschichte",
+    "help_en": "Include the index offence and convincing evidence of hands-on offences, even without a charge or conviction.",
+    "help_de": "Index-Delikt und überzeugend belegte Hands-on Sexualdelikte berücksichtigen, auch ohne Anklage oder Verurteilung.",
+    "page": 41,
+    "fields": [
+      {
+        "name": "Item_11",
+        "en": "History of sexual offences",
+        "de": "Sexualdelikte in der Vorgeschichte"
+      }
+    ]
+  },
+  {
+    "item": 12,
+    "en": "Antisociality (PCL-R facet 4)",
+    "de": "Antisozialität (PCL-R Facette 4)",
+    "help_en": "Use professionally coded PCL-R facet 4 items (0, 1 or 2), following Hare (2003). One missing item is prorated; two or more make this VRAG-R item missing.",
+    "help_de": "Fachgerecht bewertete Items der PCL-R Facette 4 (0, 1 oder 2) nach Hare (2003) verwenden. Ein fehlendes Item wird anteilig berücksichtigt; ab zwei fehlenden Werten ist das VRAG-R Item fehlend.",
+    "page": 42,
+    "fields": [
+      {
+        "name": "Item_12_1",
+        "en": "Poor Behavioral Controls",
+        "de": "Unzureichende Verhaltenskontrolle (PCL-R Item 10)"
+      },
+      {
+        "name": "Item_12_2",
+        "en": "Early Behavioral Problems",
+        "de": "Frühe Verhaltensauffälligkeiten (PCL-R Item 12)"
+      },
+      {
+        "name": "Item_12_3",
+        "en": "Juvenile Delinquency",
+        "de": "Jugendkriminalität (PCL-R Item 18)"
+      },
+      {
+        "name": "Item_12_4",
+        "en": "Revocation of Conditional Release",
+        "de": "Missachtung von Weisungen und Auflagen (PCL-R Item 19)"
+      },
+      {
+        "name": "Item_12_5",
+        "en": "Criminal Versatility",
+        "de": "Polytrope Kriminalität (PCL-R Item 20)"
+      }
+    ]
+  }
+]

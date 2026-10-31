@@ -1,0 +1,12 @@
+The original VRAGR_Calculator repository did not specify a software licence.
+This revision does not grant a new licence for that original code or project.
+Please contact the author to clarify reuse beyond permissions already granted.
+
+Interface styling, in-place translation and parts of the import/state/export
+infrastructure are adapted from Merten Neumann's OGRS_Calculator, version 2.1.2,
+commit 29acbb41ca4fa75595418e8182746ade84378a32 (2026).
+Those components are provided under the MIT licence, reproduced in
+LICENSES/OGRS-MIT.txt. Their original notice and permissions are preserved.
+
+Manuals, the VRAG-R instrument, PCL-R and published source material have their
+own rights. Software notices do not grant rights to those materials.

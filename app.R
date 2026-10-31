@@ -1,1469 +1,332 @@
-##############
-###Packages###
-##############
-library("haven")
-library("shiny")
-library("dplyr")
-library("ggplot2")
-library("readxl")
-library("gginnards")
-
-#####################
-###VRAG-R function###
-#####################
-
-# VRAG-R - Calculator
-# by Merten Neumann
-#
-# based on
-#
-# Rettenberger, M., Hertz, P. G. & Eher, R. (2017). 
-#   Die deutsche Version des Violence Risk Appraisal Guide-Revised (VRAG-R) 
-#   (Elektronische Schriftenreihe der Kriminologischen Zentralstelle e. V. (KrimZ), Band 8). 
-#    Wiesbaden: Kriminologische Zentralstelle e.V.
-#
-# Harris, G. T., Rice, M. E., Quinsey, V. L. & Cormier, C. A. (2015). 
-#   Violent offenders: Appraising and managing risk (3rd ed.). 
-#   Washington: American Psychological Association. https://doi.org/10.1037/14572-000
-
-#For single case
-compute_vrag <- function(Item_1,
-                         Item_2,
-                         Item_3_1, Item_3_2, Item_3_3, Item_3_4, Item_3_5, Item_3_6,
-                         Item_4,
-                         Item_5_1, Item_5_2, Item_5_3, Item_5_4, Item_5_5, Item_5_6, Item_5_7, Item_5_8, Item_5_9, Item_5_10,
-                         Item_5_11, Item_5_12, Item_5_13, Item_5_14, Item_5_15, Item_5_16, Item_5_17, Item_5_18, Item_5_19, Item_5_20,
-                         Item_5_21, Item_5_22, Item_5_23, Item_5_24, Item_5_25, Item_5_26, Item_5_27,
-                         Item_6,
-                         Item_7,
-                         Item_8_1, Item_8_2, Item_8_3, Item_8_4, Item_8_5, Item_8_6, Item_8_7, Item_8_8, Item_8_9, Item_8_10,
-                         Item_8_11, Item_8_12, Item_8_13, Item_8_14, Item_8_15, Item_8_16, Item_8_17, Item_8_18,
-                         Item_9,
-                         Item_10_1, Item_10_2, Item_10_3, Item_10_4, Item_10_5, Item_10_6, Item_10_7, Item_10_8, Item_10_9, Item_10_10,
-                         Item_10_11, Item_10_12,
-                         Item_11,
-                         Item_12_1, Item_12_2, Item_12_3, Item_12_4,Item_12_5) {
-  
-  #Packages
-  require(dplyr)
-  
-  #Function for missings
-  fill_missing_vrag <- function(Row) {
-    
-    sum_no_missing <- sum(Row, na.rm = TRUE)
-    
-    if(sum_no_missing >=0 ) {Max_Values <- c(2, 4, 4, 1, 5, 4, 2, 4, 6, 5, 3, 6)}else{Max_Values <- c(-2, -3, -2, -1, -3, -2, -7, -2, -2, -2, -2, -6)}
-    
-    idx_missing <- is.na(Row)
-    
-    max_no_missing <- sum(Max_Values[!idx_missing])
-    
-    prop_no_missing <- sum_no_missing/max_no_missing
-    
-    add_missing <- sum(Max_Values[idx_missing]) * prop_no_missing
-    
-    if(sum(idx_missing > 4)) {new_value <- NA}else{new_value <- round(sum_no_missing + add_missing)}
-    
-    new_value
-    
-  }
-  
-  
-  #Item 1
-  Item_1 = ifelse(Item_1 == "Yes", -2, 2)
-  
-  #Item 2
-  Item_2 = case_when(Item_2 == "None" ~ -3, 
-                     Item_2 == "Moderate" ~ 1, 
-                     Item_2 == "Severe" ~ 4)
-  
-  #Item 3
-  Item_3_1 <- ifelse(Item_3_1 == "Yes", 1, 0)
-  Item_3_2 <- ifelse(Item_3_2 == "Yes", 1, 0)
-  Item_3_3 <- ifelse(Item_3_3 == "Yes", 1, 0)
-  Item_3_4 <- ifelse(Item_3_4 == "Yes", 1, 0)
-  Item_3_5 <- ifelse(Item_3_5 == "Yes", 1, 0)
-  Item_3_6 <- ifelse(Item_3_6 == "Yes", 1, 0)
-  
-  Item_3_notNA <- sum(!is.na(c(Item_3_1, Item_3_2, Item_3_3, Item_3_4, Item_3_5, Item_3_6)))
-  
-  Item_3 <- (sum(Item_3_1, Item_3_2, Item_3_3, Item_3_4, Item_3_5, Item_3_6, na.rm = TRUE)/Item_3_notNA)*6
-  Item_3 = case_when(Item_3 < 3 ~ -2,
-                     Item_3 == 3 ~ 0,
-                     Item_3 == 4 ~ 1,
-                     Item_3 > 4 ~ 4)
-  
-  #Item 4
-  Item_4 <- ifelse(Item_4 == "Yes", -1, 1)
-  
-  #Item 5
-  Item_5 <- Item_5_1*7 +
-            Item_5_2*3 +
-            Item_5_3*2 +
-            Item_5_4*5 +
-            Item_5_5*1 +
-            Item_5_6*5 +
-            Item_5_7*5 +
-            Item_5_8*2 +
-            Item_5_9*1 +
-            Item_5_10*1 +
-            Item_5_11*1 +
-            Item_5_12*5 +
-            Item_5_13*1 +
-            Item_5_14*2 +
-            Item_5_15*1 +
-            Item_5_16*1 +
-            Item_5_17*1 +
-            Item_5_18*1 +
-            Item_5_19*1 +
-            Item_5_20*1 +
-            Item_5_21*1 +
-            Item_5_22*1 +
-            Item_5_23*1 +
-            Item_5_24*1 +
-            Item_5_25*1 +
-            Item_5_26*1 +
-            Item_5_27*1
-  
-  Item_5 <- case_when(Item_5 == 0 ~ -3,
-                      Item_5 == 1 | Item_5 == 2 ~ -1,
-                      Item_5 > 2 & Item_5 < 9 ~ 1,
-                      Item_5 > 8 & Item_5 < 18 ~ 3,
-                      Item_5 > 17 ~ 5)
-  
-  #Item 6
-  Item_6 <- ifelse(Item_6 == "Yes", 4, -2)
-  
-  #Item 7
-  Item_7 <- case_when(Item_7 < 26 ~ 2,
-                      Item_7 > 25 & Item_7 < 31 ~ 1,
-                      Item_7 > 30 & Item_7 < 34 ~ -1,
-                      Item_7 > 33 & Item_7 < 39 ~ -2,
-                      Item_7 > 38 & Item_7 < 46 ~ -4,
-                      Item_7 > 45 ~ -7)
-  
-  #Item 8
-  Item_8 <- Item_8_1*28 +
-            Item_8_2*7 +
-            Item_8_3*6 +
-            Item_8_4*6 +
-            Item_8_5*7 +
-            Item_8_6*5 +
-            Item_8_7*3 +
-            Item_8_8*2 +
-            Item_8_9*3 +
-            Item_8_10*15 +
-            Item_8_11*12 +
-            Item_8_12*10 +
-            Item_8_13*6 +
-            Item_8_14*6 +
-            Item_8_15*2 +
-            Item_8_16*8 +
-            Item_8_17*5 +
-            Item_8_18*4
-  
-  Item_8 <- case_when(Item_8 == 0 ~ -2,
-                      Item_8 > 0 & Item_8 < 5 ~ 2,
-                      Item_8 > 4 & Item_8 < 19 ~ 3,
-                      Item_8 > 18 ~ 4)
-  
-  #Item 9
-  Item_9 <- case_when(Item_9 == 0 ~ -2,
-                      Item_9 == 1 ~ 2,
-                      Item_9 == 2 ~ 3,
-                      Item_9 == 3 | Item_9 == 4 ~ 4,
-                      Item_9 > 4 ~ 6)
-  
-  #Item 10
-  Item_10_1 <- ifelse(Item_10_1 == "Yes", 1, 0)
-  Item_10_2 <- ifelse(Item_10_2 == "Yes", 1, 0)
-  Item_10_3 <- ifelse(Item_10_3 == "Yes", 1, 0)
-  Item_10_4 <- ifelse(Item_10_4 == "Yes", 1, 0)
-  Item_10_5 <- ifelse(Item_10_5 == "Yes", 1, 0)
-  Item_10_6 <- ifelse(Item_10_6 == "Yes", 1, 0)
-  Item_10_7 <- ifelse(Item_10_7 == "Yes", 1, 0)
-  Item_10_8 <- ifelse(Item_10_8 == "Yes", 1, 0)
-  Item_10_9 <- ifelse(Item_10_9 == "Yes", 1, 0)
-  Item_10_10 <- ifelse(Item_10_10 == "Yes", 1, 0)
-  Item_10_11 <- ifelse(Item_10_11 == "Yes", 1, 0)
-  Item_10_12 <- ifelse(Item_10_12 == "Yes", 1, 0)
-  
-  Item_10 <- sum(Item_10_1, Item_10_2, Item_10_3, Item_10_4, Item_10_5, Item_10_6,
-                 Item_10_7, Item_10_8, Item_10_9, Item_10_10, Item_10_11, Item_10_12)
-  
-  Item_10 <- case_when(Item_10 == 0 ~ -2,
-                       Item_10 == 1 ~ 0,
-                       Item_10 > 1 & Item_10 < 5 ~ 4,
-                       Item_10 > 4 ~ 5)
-  
-  #Item 11
-  Item_11 <- case_when(Item_11 == "None" ~ -2,
-                       Item_11 == "Only14" ~ -1,
-                       Item_11 == "Other" ~ 2,
-                       Item_11 == "Female14" ~ 3)
-  
-  #Item 12
-  Item_12 <- sum(Item_12_1, Item_12_2, Item_12_3, Item_12_4, Item_12_5, na.rm = TRUE)
-  
-  Item_12_NA <- sum(is.na(c(Item_12_1, Item_12_2, Item_12_3, Item_12_4, Item_12_5)))
-  
-  if(Item_12_NA == 1) {
-    
-    Item_12 <- case_when(Item_12 == 8 ~ 10,
-                         Item_12 == 7 ~ 8.7,
-                         Item_12 == 6 ~ 7.5,
-                         Item_12 == 5 ~ 6.2,
-                         Item_12 == 4 ~ 5.0,
-                         Item_12 == 3 ~ 3.7,
-                         Item_12 == 2 ~ 2.5,
-                         Item_12 == 1 ~ 1.2,
-                         Item_12 == 0 ~ 0)
-    
-  }else{if(Item_12_NA > 1){Item_12 <- NA}}
-  
-  Item_12 <- case_when(Item_12 == 0 ~ -6,
-                       Item_12 >= 1 & Item_12 < 2.5 ~ -3,
-                       Item_12 >= 2.5 & Item_12 < 3.5 ~ 2,
-                       Item_12 >= 3.5 & Item_12 < 7.5 ~ 3,
-                       Item_12 >= 7.5 ~ 6)
-  
-  
-  
-  #Compute Score
-  Item_Scores <- c(Item_1, Item_2, Item_3, 
-                   Item_4, Item_5, Item_6, 
-                   Item_7, Item_8, Item_9, 
-                   Item_10, Item_11, Item_12)
-  
-  Num_Missing <- sum(is.na(Item_Scores))
-  
-  if(any(is.na(Item_Scores))) {
-    
-    Vrag_score <- ifelse(Num_Missing > 4, NA, fill_missing_vrag(Item_Scores))
-    
-  }else{
-    
-    Vrag_score <- sum(Item_Scores)
-    
-  }
-  
-  #Risk classification
-  Risk_Category <- case_when(Vrag_score <= -24 ~ 1,
-                             Vrag_score > -24 & Vrag_score <= -17 ~ 2,
-                             Vrag_score > -17 & Vrag_score <= -11 ~ 3,
-                             Vrag_score > -11 & Vrag_score <= -4 ~ 4,
-                             Vrag_score > -4 & Vrag_score <= 3 ~ 5,
-                             Vrag_score > 3 & Vrag_score <= 11 ~ 6,
-                             Vrag_score > 11 & Vrag_score <= 17 ~ 7,
-                             Vrag_score > 17 & Vrag_score <= 26 ~ 8,
-                             Vrag_score > 26 ~ 9)
-  
-  #Percentile
-  Percentile <- case_when(Vrag_score == -34 ~ 1.2,
-                          Vrag_score == -33 ~ 1.4,
-                          Vrag_score == -32 ~ 1.9,
-                          Vrag_score == -31 ~ 2.6,
-                          Vrag_score == -30 ~ 3.7,
-                          Vrag_score == -29 ~ 4.9,
-                          Vrag_score == -28 ~ 5.7,
-                          Vrag_score == -27 ~ 7.0,
-                          Vrag_score == -26 ~ 8.8,
-                          Vrag_score == -25 ~ 9.6,
-                          Vrag_score == -24 ~ 11.2,
-                          Vrag_score == -23 ~ 13.2,
-                          Vrag_score == -22 ~ 14.5,
-                          Vrag_score == -21 ~ 16,
-                          Vrag_score == -20 ~ 17.7,
-                          Vrag_score == -19 ~ 20.1,
-                          Vrag_score == -18 ~ 21.7,
-                          Vrag_score == -17 ~ 24,
-                          Vrag_score == -16 ~ 26.5,
-                          Vrag_score == -15 ~ 28.4,
-                          Vrag_score == -14 ~ 30.1,
-                          Vrag_score == -13 ~ 31.3,
-                          Vrag_score == -12 ~ 33.2,
-                          Vrag_score == -11 ~ 35.6,
-                          Vrag_score == -10 ~ 36.8,
-                          Vrag_score == -9 ~ 38.5,
-                          Vrag_score == -8 ~ 39.5,
-                          Vrag_score == -7 ~ 41.2,
-                          Vrag_score == -6 ~ 42.2,
-                          Vrag_score == -5 ~ 43.8,
-                          Vrag_score == -4 ~ 45.5,
-                          Vrag_score == -3 ~ 46.5,
-                          Vrag_score == -2 ~ 48.1,
-                          Vrag_score == -1 ~ 49.7,
-                          Vrag_score == 0 ~ 51.4,
-                          Vrag_score == 1 ~ 53.3,
-                          Vrag_score == 2 ~ 54.5,
-                          Vrag_score == 3 ~ 56,
-                          Vrag_score == 4 ~ 57.6,
-                          Vrag_score == 5 ~ 59.2,
-                          Vrag_score == 6 ~ 60.7,
-                          Vrag_score == 7 ~ 62.1,
-                          Vrag_score == 8 ~ 63.9,
-                          Vrag_score == 9 ~ 65,
-                          Vrag_score == 10 ~ 66.1,
-                          Vrag_score == 11 ~ 67.4,
-                          Vrag_score == 12 ~ 69.7,
-                          Vrag_score == 13 ~ 71.7,
-                          Vrag_score == 14 ~ 73.6,
-                          Vrag_score == 15 ~ 75,
-                          Vrag_score == 16 ~ 76.7,
-                          Vrag_score == 17 ~ 78.1,
-                          Vrag_score == 18 ~ 79.8,
-                          Vrag_score == 19 ~ 81.4,
-                          Vrag_score == 20 ~ 83.2,
-                          Vrag_score == 21 ~ 83.9,
-                          Vrag_score == 22 ~ 84.8,
-                          Vrag_score == 23 ~ 86.1,
-                          Vrag_score == 24 ~ 86.9,
-                          Vrag_score == 25 ~ 88.1,
-                          Vrag_score == 26 ~ 89.3,
-                          Vrag_score == 27 ~ 90.4,
-                          Vrag_score == 28 ~ 91.2,
-                          Vrag_score == 29 ~ 92.4,
-                          Vrag_score == 30 ~ 93.6,
-                          Vrag_score == 31 ~ 94.3,
-                          Vrag_score == 32 ~ 95.1,
-                          Vrag_score == 33 ~ 95.8,
-                          Vrag_score == 34 ~ 96.6,
-                          Vrag_score == 35 ~ 97.3,
-                          Vrag_score == 36 ~ 97.7,
-                          Vrag_score == 37 ~ 98,
-                          Vrag_score == 38 ~ 98.2,
-                          Vrag_score == 39 ~ 98.8,
-                          Vrag_score == 40 ~ 99,
-                          Vrag_score == 41 ~ 99.5,
-                          Vrag_score == 42 ~ 99.8,
-                          Vrag_score == 43 ~ 99.9,
-                          Vrag_score == 44 ~ 100)
-  
-  #Probability for recedivism
-  Prob_5 <- case_when(Risk_Category == 1 ~ 9,
-                      Risk_Category == 2 ~ 12,
-                      Risk_Category == 3 ~ 16,
-                      Risk_Category == 4 ~ 20,
-                      Risk_Category == 5 ~ 26,
-                      Risk_Category == 6 ~ 34,
-                      Risk_Category == 7 ~ 45,
-                      Risk_Category == 8 ~ 58,
-                      Risk_Category == 9 ~ 76)
-  
-  Prob_12 <- case_when(Risk_Category == 1 ~ 15,
-                       Risk_Category == 2 ~ 24,
-                       Risk_Category == 3 ~ 33,
-                       Risk_Category == 4 ~ 42,
-                       Risk_Category == 5 ~ 51,
-                       Risk_Category == 6 ~ 60,
-                       Risk_Category == 7 ~ 69,
-                       Risk_Category == 8 ~ 78,
-                       Risk_Category == 9 ~ 87)
-  
-  #Export
-  Out_list <- list("Score" = Vrag_score,
-                   "Risk Category" = Risk_Category,
-                   "Percentile" = Percentile,
-                   "Probability for violent revedivism after 5 years" = Prob_5,
-                   "Probability for violent revedivism after 5 years" = Prob_12,
-                   "Number of missing items" = Num_Missing,
-                   "Items" = list(
-                     "Item 1" = Item_1,
-                     "Item 2" = Item_2,
-                     "Item 3" = Item_3,
-                     "Item 4" = Item_4,
-                     "Item 5" = Item_5,
-                     "Item 6" = Item_6,
-                     "Item 7" = Item_7,
-                     "Item 8" = Item_8,
-                     "Item 9" = Item_9,
-                     "Item 10" = Item_10,
-                     "Item 11" = Item_11,
-                     "Item 12" = Item_12))
-  
-  Out_list
-  
+# Bilingual VRAG-R application. Scoring is shared with the standalone R API.
+library(shiny)
+library(bslib)
+library(ggplot2)
+source("VRAGR.R", local=TRUE)
+source("R/workflow.R", local=TRUE)
+source("R/i18n.R", local=TRUE)
+.app_root <- normalizePath(".",mustWork=TRUE)
+options(shiny.maxRequestSize=10*1024^2,shiny.sanitize.errors=TRUE)
+manual_link <- function(label="German manual (PDF)",page=NULL) tags$a(label,
+  href=paste0(VRAGR_MANUAL_URL,if(!is.null(page)) paste0("#page=",page+2)),target="_blank",rel="noopener noreferrer")
+external_link <- function(label,url) tags$a(label,href=url,target="_blank",rel="noopener noreferrer")
+notice <- function(...,type="info") div(class=paste("notice",paste0("notice-",type)),...)
+intro <- function(kicker,title,text) div(class="section-intro",p(class="eyebrow",kicker),h1(title),p(class="intro-copy",text))
+hint <- function(...) p(class="item-hint",...)
+csv_note <- function() hint("CSV uses UTF-8, comma separators, decimal points and English column names in both languages. Probabilities are exported between 0 and 1. Invalid dataset rows retain their status and error explanations.")
+interpretation_note <- function() notice("These are reference-group rates of violent recidivism, not a certain prediction for an individual. Percentile rank is not a recidivism probability. ",manual_link("Interpretation and limitations",11))
+single_group <- function(group) {
+  i <- group$item
+  controls <- lapply(group$fields,function(field) {
+    id <- paste0("single_",field$name)
+    label <- tagList(tags$small(class="field-code",field$name)," ",field$en)
+    if(field$name %in% vragr_categories || i==12) i18n_select_input(id,label,
+      choices=c("Please select"="",choice_labels(field$name),"No information"="__missing__"),selected="")
+    else numericInput(id,label,value=NA_real_,min=if(i==7) 1 else 0,step=1)
+  })
+  extra <- NULL
+  if(i %in% c(5,8)) {
+    extra <- tagList(i18n_select_input(paste0("single_info_",i),"Information on this item",
+      c("Please select"="","Information available"="known","No information"="missing"),selected=""),
+      actionButton(paste0("zero_",i),"Set all counts to zero",class="btn-outline-secondary"))
+    controls <- conditionalPanel(sprintf("input.single_info_%d === 'known'",i),div(class="form-grid",controls))
+  } else if(i %in% c(7,9)) extra <- checkboxInput(paste0("single_missing_",i),"No information",FALSE)
+  accordion_panel(paste0("Item ",i," · ",group$en),hint(group$help_en," ",manual_link("Coding guidance",group$page)),
+    extra,if(i %in% c(3,10,12)) div(class="form-grid",controls) else controls,value=paste0("item",i))
 }
+ui <- page_navbar(
+  title=div(class="app-brand",span(class="brand-symbol","R"),span("VRAG-R",tags$small("Calculator"))),
+  id="main_nav",selected="single",lang="en",fillable=FALSE,window_title="VRAG-R · Calculator",
+  theme=bs_theme(version=5,bg="#f5f5f5",fg="#333333",primary="#337ab7",secondary="#60666c",base_font="system-ui"),
+  header=tags$head(tags$link(rel="stylesheet",href="app.css"),
+    tags$script(id="i18n-catalog",type="application/json",HTML(jsonlite::toJSON(as.list(.translation_catalog),auto_unbox=TRUE))),
+    tags$script(src="i18n.js",defer=NA)),
+  footer=div(class="app-footer",span(paste("VRAG-R · App",VRAGR_APP_VERSION)),span("Coding: Rettenberger, Gregório Hertz & Eher (2017) · Model: Harris et al. (2015)")),
+  nav_panel("Single case",value="single",
+    intro("SINGLE CASE","Calculate a VRAG-R result.","Enter the twelve items, explicitly mark unavailable information and click Calculate result. You can then download the result and its inputs as CSV. Consult the manual for case-specific coding decisions."),
+    layout_columns(col_widths=c(5,7),
+      card(class="input-card",card_header(h2("Case details")),
+        hint("Start with empty inputs or load a synthetic example. Missing information is not the same as No or zero."),
+        accordion(!!!lapply(.vragr_schema,single_group),open="item1",id="single_items"),
+        uiOutput("single_validation"),div(class="action-row",actionButton("single_calculate","Calculate result",class="btn-primary"),
+          actionButton("single_example","Load example",class="btn-outline-secondary"),actionButton("single_reset","Reset inputs",class="btn-outline-secondary")),
+        uiOutput("example_notice")),
+      div(class="result-column",uiOutput("single_results"),interpretation_note(),
+        card(card_header(h2("Score and reference distribution")),plotOutput("single_plot",height="300px"),
+          hint("The curve shows the published empirical percentile ranks. It does not assume a normal distribution."),
+          accordion(open=FALSE,accordion_panel("Download plot",
+            i18n_select_input("plot_format","Plot format",c("PNG"="png","JPEG"="jpeg","PDF"="pdf","SVG"="svg","TIFF"="tiff")),
+            numericInput("plot_width","Width (inches)",8,min=2,max=30),numericInput("plot_height","Height (inches)",4,min=2,max=30),
+            numericInput("plot_dpi","Resolution (DPI)",150,min=72,max=600),uiOutput("plot_download_control"))))))),
+  nav_panel("Dataset",value="batch",
+    intro("DATASET CALCULATION","Calculate results for a dataset.","Upload a file, map its columns and categories, review the data checks, then calculate and export the results. A downloadable synthetic example contains all 75 input columns."),
+    notice(tags$strong("Minimise uploaded data. "),"Only the required fields and an optional pseudonymous case ID are needed. Do not upload names, dates of birth or original case reference numbers."),
+    layout_columns(col_widths=c(5,7),
+      card(card_header(h2("1 · Choose a file")),fileInput("batch_file","Upload dataset (maximum 10 MiB)",
+        accept=c(".xlsx",".csv",".txt",".sav"),buttonLabel="Choose file",placeholder="No file selected"),
+        i18n_select_input("batch_format","File format",c("Detect automatically"="auto","Excel (.xlsx)"="xlsx","CSV · Comma-separated"="csv","CSV · Semicolon-separated"="csv2","Text · Tab-separated"="txt","SPSS (.sav)"="sav")),
+        numericInput("batch_sheet","Worksheet number (Excel only)",1,min=1,step=1),
+        i18n_select_input("batch_decimal","Decimal mark in numeric text",c("Point"=".","Comma"=",")),
+        hint("The first row must contain unique column names. Maximum 100,000 data rows. Blank cells mean missing information; an unknown category must be mapped explicitly."),
+        downloadButton("example_download","Download example dataset",class="btn-outline-secondary"),uiOutput("import_message")),
+      card(card_header(h2("Preview")),hint("The first six rows are shown exactly as imported."),div(class="table-scroll",tableOutput("batch_preview")))),
+    card(card_header(h2("2 · Map variables")),uiOutput("column_mapping")),
+    card(card_header(h2("3 · Map categories")),hint("Check each suggested category mapping. Stored SPSS values remain the mapping keys; labels can provide suggestions. Unmapped values are invalid, rather than silently scored as No."),uiOutput("category_mapping")),
+    card(card_header(h2("4 · Check data and calculate")),uiOutput("batch_validation_summary"),div(class="table-scroll",tableOutput("batch_issues")),actionButton("batch_calculate","Calculate checked data",class="btn-primary")),
+    card(card_header(h2("5 · Results and export")),uiOutput("batch_status"),uiOutput("batch_summary"),
+      i18n_select_input("batch_outcome","Display distribution",c("VRAG-R score"="Score","Risk category"="Risk_Category")),plotOutput("batch_plot",height="300px"),
+      uiOutput("batch_download_control"),csv_note()),interpretation_note()),
+  nav_panel("Methods",value="methods",
+    intro("METHODS","VRAG-R: instrument and calculation","Read how the items are combined, what the reported measures mean and which limitations apply. The manual provides the full administration and coding rules."),
+    layout_columns(col_widths=c(7,5),
+      card(card_header(h2("What the VRAG-R measures")),
+        p("The VRAG-R combines twelve mainly historical factors to assess violent recidivism. The total score identifies one of nine risk categories. Published rates describe groups with comparable scores; an individual assessment also needs other relevant information."),
+        p("Violent recidivism includes new charges for specified violent offences and hands-on sexual offences, and qualifying institutional violence. It is not limited to convictions, and is not the same as general reoffending or sexual recidivism alone."),
+        p("The five- and twelve-year rates concern periods with an opportunity to reoffend. They are cumulative reference-group rates, not annual rates or two separate consecutive periods."),
+        manual_link("Outcome definition and development sample",7)),
+      card(card_header(h2("Measures and missing information")),
+        tags$ul(tags$li("Score: sum of the twelve weighted items, from −34 to +46."),
+          tags$li("Risk category: 1 to 9, using the published total-score boundaries."),
+          tags$li("Percentile: percentage of the reference sample with an equal or lower score. This is not a probability of reoffending."),
+          tags$li("At most four whole items may be missing. The total is adjusted using the positive or negative possible scores of the particular missing items."),
+          tags$li("Item 3 is prorated when at least one subitem is known, then rounded before coding. Item 12 allows at most one missing PCL-R facet item.")),
+        manual_link("Tables and missing-data rules",11))),
+    card(card_header(h2("Application and limitations")),
+      p("The development sample comprised 1,261 male offenders, largely from Ontario, Canada. Absolute rates may differ between jurisdictions and populations. The cited manual does not establish equivalent calibration for women. Some participants were juveniles at the index offence but almost all were adults when the at-risk period began."),
+      p("Professional judgement is needed to establish the index offence and code the items. PCL-R coding requires its own manual and appropriate qualifications. This calculator does not perform a PCL-R assessment."),
+      p("The app reports the unadjusted reference rates. It does not adjust for years lived free of violence after release, treatment or other dynamic changes. The manual discusses these matters separately; time in custody is not equivalent to violence-free time in the community."),
+      p("For partially unknown indicators in Items 5, 8 and 10, the app conservatively marks the whole item missing. The manual does not give those items a subitem prorating formula. Values cannot simply be replaced with zero."),
+      p("Rounding uses the nearest whole number, with exact halves away from zero. The manual specifies rounding but does not explicitly settle midpoint ties. Percentiles for scores 45 and 46 are 100 because the empirical cumulative table already reaches 100 at 44."),
+      manual_link("Full application guidance",13)),
+    card(card_header(h2("Model and sources")),
+      p(manual_link("Rettenberger, Gregório Hertz & Eher (2017)"),". Die deutsche Version des Violence Risk Appraisal Guide-Revised (VRAG-R). BM-Online, volume 8. Kriminologische Zentralstelle."),
+      p(external_link("Harris, Rice, Quinsey & Cormier (2015)","https://doi.org/10.1037/14572-000"),". Violent offenders: Appraising and managing risk (3rd ed.). American Psychological Association."),
+      p("Scoring tables and coding rules were checked against the publicly available German manual. The full Harris (2015) and Hare (2003) manuals were not available for an independent page-by-page review. Source decisions and regression tests are documented in the repository."),
+      p(external_link("Source review and implementation decisions","https://github.com/MertenNeumann/VRAGR_Calculator/blob/main/docs/MODEL_AND_SOURCES.md")))),
+  nav_panel("About the app",value="about",
+    intro("ABOUT","About this app","Find source code, contact links, issue reporting and information on server-side processing here."),
+    layout_columns(col_widths=c(7,5),
+      card(card_header(h2("Code and contact")),p("Developed by Merten Neumann."),
+        p(external_link("Source code and documentation","https://github.com/MertenNeumann/VRAGR_Calculator")),
+        p("Bug reports, feature requests and suggestions for additions are welcome via ",external_link("GitHub Issues","https://github.com/MertenNeumann/VRAGR_Calculator/issues"),". Please do not post personal information or original case data."),
+        p(external_link("ResearchGate","https://www.researchgate.net/profile/Merten-Neumann")," · ",external_link("Google Scholar","https://scholar.google.com/citations?user=QjfiK8gAAAAJ&hl=de"))),
+      card(card_header(h2("Related calculator")),p("OGRS 3 is available as a separate calculator for general reoffending."),
+        p(external_link("OGRS 3 calculator","https://mertenneumann.shinyapps.io/OGRS_Calculator/")),
+        p(external_link("OGRS 3 source code","https://github.com/MertenNeumann/OGRS_Calculator")))),
+    card(card_header(h2("Data processing")),
+      p("Calculations and uploads run on the server. The application code does not create a permanent case database or log case details. Inputs and files remain available for processing during the session."),
+      p("Temporary uploads are removed on replacement and recognised session end where the server can execute cleanup. Disconnects, crashes, hosting logs and backups have separate limits; immediate or complete deletion is not guaranteed."),
+      p("For shinyapps.io, Posit documents hosting on AWS in us-east-1 (USA). The deployment operator must establish the applicable privacy information, retention and lawful operating conditions before processing real case data."),
+      p(external_link("Posit security and compliance documentation","https://docs.posit.co/shinyapps.io/guide/security_and_compliance/index.html"))),
+    card(card_header(h2("AI-assisted development")),
+      p("OpenAI Codex assisted with revising the code, interface, documentation and software tests. The app calculates results using the documented R code; no AI model is used to score cases. AI assistance does not replace professional review or case-specific assessment."))),
+  nav_spacer(),nav_item(div(class="language-control",i18n_select_input("language","Language / Sprache",c("English"="en","Deutsch"="de"),selected="en",selectize=FALSE))))
 
-#For data set
-compute_vrag_data <- function(Data, Outcome = "Score", Shiny_Progress = FALSE) {
-  
-  #Packages
-  if(Shiny_Progress) {require("shiny")}
-  
-  #Helper function for one row
-  compute_vrag_row <- function(Row, Outcome) {
-    
-    Res_raw <- compute_vrag(Row[, 1],
-                            Row[, 2],
-                            Row[, 3], Row[, 4], Row[, 5], Row[, 6], Row[, 7], Row[, 8],
-                            Row[, 9],
-                            Row[, 10], Row[, 11], Row[, 12], Row[, 13],Row[, 14], Row[, 15], Row[, 16], Row[, 17], Row[, 18], Row[, 19],
-                            Row[, 20], Row[, 21], Row[, 22], Row[, 23], Row[, 24], Row[, 25], Row[, 26], Row[, 27], Row[, 28], Row[, 29],
-                            Row[, 30], Row[, 31], Row[, 32], Row[, 33], Row[, 34], Row[, 35], Row[, 36],
-                            Row[, 37],
-                            Row[, 38],
-                            Row[, 39], Row[, 40], Row[, 41], Row[, 42], Row[, 43], Row[, 44], Row[, 45], Row[, 46], Row[, 47], Row[, 48],
-                            Row[, 49], Row[, 50], Row[, 51], Row[, 52], Row[, 53], Row[, 54], Row[, 55], Row[, 56],
-                            Row[, 57],
-                            Row[, 58], Row[, 59], Row[, 60], Row[, 61], Row[, 62], Row[, 63], Row[, 64], Row[, 65], Row[, 66], Row[, 67],
-                            Row[, 68], Row[, 69],
-                            Row[, 70],
-                            Row[, 71], Row[, 72], Row[, 73], Row[, 74],Row[, 75])
-    
-    Res <- Res_raw[[Outcome]]
-    
-    Res
-    
+server <- function(input,output,session) {
+  language <- reactive(if(identical(input$language,"de")) "de" else "en")
+  tx <- function(text) translate(text,language())
+  render_ui <- function(expr) {
+    f <- function() NULL; body(f) <- substitute(expr); environment(f) <- parent.frame()
+    renderUI(localize_ui(f(),language()))
   }
-  
-  Out_Data <- Data
-  
-  #Computation with progress bar
-  if(Shiny_Progress) {
-    
-    withProgress(message = "Computing", value = 0, {
-      
-      N <- nrow(Data)*length(Outcome)
-      Inc_idx <- ceiling(N/100)
-      Run <- 0
-      
-      
-      for(j in Outcome) {
-        
-        Out_Data[, j] <- rep(NA, times = nrow(Data))
-        
-        for(i in 1:nrow(Data)) {
-          
-          Out_Data[i, j] <- compute_vrag_row(Data[i,], j)
-          
-          Run <- Run + 1
-          
-          if(Run %% Inc_idx == 0) {setProgress(value = Run/N, detail = paste(as.character(round((Run/N) * 100, digits = 0)), "%"))}
-          
-        }
+  render_inputs <- function(expr) {
+    f <- function() NULL; body(f) <- substitute(expr); environment(f) <- parent.frame()
+    renderUI(localize_ui(f()))
+  }
+  single_state <- reactive({
+    incomplete <- character()
+    values <- setNames(lapply(vragr_fields,function(field) {
+      item <- as.integer(strsplit(field,"_",fixed=TRUE)[[1]][2]); value <- input[[paste0("single_",field)]]
+      if(item %in% c(5,8)) {
+        info <- input[[paste0("single_info_",item)]] %||% ""
+        if(info=="missing") return(NA_real_)
+        if(info!="known") incomplete <<- c(incomplete,field)
       }
-      
-    })
-    
-    
-  }else{
-    
-    #Computation without progress bar
-    for(j in Outcome) {
-      
-      Out_Data[, j] <- rep(NA, times = nrow(Data))
-      
-      for(i in 1:nrow(Data)) {
-        
-        Out_Data[i, j] <- compute_vrag_row(Data[i,], j)
-        
+      if(item %in% c(7,9) && isTRUE(input[[paste0("single_missing_",item)]])) return(NA_real_)
+      if(identical(value,"__missing__")) return(NA)
+      if(is.null(value) || identical(value,"") || (is.numeric(value) && is.na(value))) {
+        incomplete <<- c(incomplete,field); return(NA)
       }
+      value
+    }),vragr_fields)
+    list(data=as.data.frame(values,stringsAsFactors=FALSE),incomplete=unique(incomplete))
+  })
+  single_saved <- reactiveVal(NULL); example_loaded <- reactiveVal(FALSE)
+  set_case <- function(data=NULL) {
+    for(field in vragr_fields) {
+      value <- if(is.null(data)) NA else data[[field]][1]
+      if(field %in% vragr_categories || grepl("^Item_12_",field))
+        updateSelectInput(session,paste0("single_",field),selected=if(is.null(data)) "" else if(is.na(value)) "__missing__" else as.character(value))
+      else updateNumericInput(session,paste0("single_",field),value=if(is.na(value)) NA_real_ else as.numeric(value))
     }
+    for(i in c(5,8)) updateSelectInput(session,paste0("single_info_",i),selected=if(is.null(data)) "" else "known")
+    for(i in c(7,9)) updateCheckboxInput(session,paste0("single_missing_",i),value=!is.null(data) && is.na(data[[paste0("Item_",i)]][1]))
   }
-  
-  #Export
-  Out_Data
-  
+  observeEvent(input$single_example,{set_case(read_vragr_file(file.path(.app_root,"examples/example-data.csv"),"csv")[1,,drop=FALSE]);example_loaded(TRUE)})
+  observeEvent(input$single_reset,{set_case();single_saved(NULL);example_loaded(FALSE)})
+  for(item in c(5,8)) local({i <- item; observeEvent(input[[paste0("zero_",i)]],{
+    updateSelectInput(session,paste0("single_info_",i),selected="known")
+    for(j in seq_len(if(i==5) 27 else 18)) updateNumericInput(session,paste0("single_Item_",i,"_",j),value=0)
+  })})
+  output$example_notice <- render_ui(if(example_loaded()) hint("Synthetic example loaded. Review the inputs before calculating."))
+  single_errors <- reactive({
+    state <- single_state()
+    if(length(state$incomplete)) return("Complete each input or explicitly mark information as missing.")
+    issues <- validate_vragr(state$data)
+    if(nrow(issues)) return(paste(issues$field,tx(issues$message),sep=": "))
+    result <- vragr(state$data)
+    if(result$Status!="calculated") result$Error else character()
+  })
+  observeEvent(input$single_calculate,{
+    state <- single_state()
+    if(!length(single_errors())) single_saved(list(data=state$data,scores=vragr(state$data),time=Sys.time()))
+  })
+  output$single_validation <- render_ui({
+    if((input$single_calculate %||% 0)==0) return(NULL)
+    errors <- single_errors()
+    if(length(errors)) notice(tags$strong("Please check the inputs"),tags$ul(lapply(tx(errors),tags$li)),type="warning")
+  })
+  single_ready <- reactive(!is.null(single_saved()) && identical(single_saved()$data,single_state()$data) && !length(single_state()$incomplete))
+  output$single_results <- render_ui({
+    if(!single_ready()) return(card(class="empty-result",card_header(h2("Your result")),
+      h3(if(is.null(single_saved())) "No calculation yet." else "Inputs changed."),
+      p("Complete the inputs and calculate. Previous results remain hidden until recalculation.")))
+    saved <- single_saved(); score <- saved$scores
+    tile <- function(label,id,value) div(class="probability",span(label),strong(id=id,value))
+    card(class="result-card",card_header(h2("VRAG-R result")),
+      div(class="probability-grid",tile("VRAG-R score","score_value",format_number(score$Score,language())),tile("Risk category","category_value",score$Risk_Category)),
+      p("Percentile rank: ",strong(id="percentile_value",format_number(score$Percentile,language(),1))," · ","Missing items: ",score$Missing_items),
+      h3("Reference-group violent recidivism"),
+      div(class="probability-grid",tile("Within five years","prob_five",format_probability(score$Prob_5_years,language())),tile("Within twelve years","prob_twelve",format_probability(score$Prob_12_years,language()))),
+      div(class="result-meta",paste(tx("Calculated:"),format_local_time(saved$time,language()))),
+      accordion(open=FALSE,accordion_panel("Item scores",div(class="table-scroll",tableOutput("single_item_scores")))),
+      downloadButton("single_download","Download result as CSV",class="btn-outline-primary"),csv_note())
+  })
+  output$single_item_scores <- renderTable({
+    req(single_ready());score <- single_saved()$scores
+    setNames(data.frame(Item=seq_len(12),Description=vapply(.vragr_schema,function(g) tx(g$en),character(1)),
+      Score=format_number(unname(unlist(score[paste0("Item_",1:12,"_score")])),language())),tx(c("Item","Description","Score")))
+  },rownames=FALSE)
+  output$single_download <- downloadHandler(filename=function(){req(single_ready());vragr_export_filename("Single_case",single_saved()$time)},content=function(file){
+    req(single_ready());saved <- single_saved();write.csv(make_vragr_export(saved$data,saved$scores,timestamp=saved$time),file,row.names=FALSE,na="",fileEncoding="UTF-8")
+  })
+  single_plot <- reactive({
+    req(single_ready());score <- single_saved()$scores
+    ggplot(data.frame(Score=-34:46,Percentile=vragr_percentiles),aes(Score,Percentile))+
+      geom_step(colour="#60666c")+geom_vline(xintercept=score$Score,colour="#b22222",linetype=2)+
+      geom_point(data=data.frame(Score=score$Score,Percentile=score$Percentile),colour="#337ab7",size=3)+
+      scale_y_continuous(limits=c(0,100))+labs(x=tx("VRAG-R score"),y=tx("Percentile rank"))+theme_minimal(base_size=13)
+  })
+  output$single_plot <- renderPlot({validate(need(single_ready(),tx("The plot appears after an up-to-date calculation.")));single_plot()},alt=reactive(tx("Empirical percentile ranks and the current VRAG-R score.")))
+  output$plot_download_control <- render_ui(if(single_ready()) downloadButton("plot_download","Download plot",class="btn-outline-primary"))
+  output$plot_download <- downloadHandler(filename=function(){req(single_ready());format <- input$plot_format %||% "png";req(format %in% c("png","jpeg","pdf","svg","tiff"));sub("csv$",format,vragr_export_filename("Plot",single_saved()$time))},content=function(file){
+    req(single_ready());format <- input$plot_format %||% "png";req(format %in% c("png","jpeg","pdf","svg","tiff"))
+    width <- input$plot_width; height <- input$plot_height; dpi <- input$plot_dpi
+    req(is.finite(width),width>=2,width<=30,is.finite(height),height>=2,height<=30,is.finite(dpi),dpi>=72,dpi<=600)
+    ggsave(file,plot=single_plot(),device=if(format=="svg") grDevices::svg else format,width=width,height=height,dpi=dpi,limitsize=TRUE)
+  })
+
+  uploaded_paths <- character()
+  cleanup <- function(paths) {
+    base <- paste0(normalizePath(tempdir()),.Platform$file.sep)
+    for(path in paths) {resolved <- normalizePath(path,mustWork=FALSE);if(startsWith(resolved,base) && file.exists(resolved) && !dir.exists(resolved)) unlink(resolved)}
+  }
+  observeEvent(input$batch_file,{path <- input$batch_file$datapath;cleanup(setdiff(uploaded_paths,path));uploaded_paths <<- union(uploaded_paths,path)},ignoreNULL=FALSE)
+  session$onSessionEnded(function() cleanup(uploaded_paths))
+  imported <- reactive({
+    if(is.null(input$batch_file)) return(list(data=NULL,error=NULL))
+    tryCatch(list(data=read_vragr_file(input$batch_file$datapath,input$batch_format %||% "auto",input$batch_file$name,input$batch_sheet %||% 1L),error=NULL),
+      error=function(e) list(data=NULL,error="The file could not be read. Check the format, worksheet, unique column names and file size."))
+  })
+  output$import_message <- render_ui({x <- imported();if(!is.null(x$error)) notice(tx(x$error),type="warning") else if(!is.null(x$data)) hint(paste(nrow(x$data),tx("data rows"),"·",ncol(x$data),tx("columns")))})
+  output$batch_preview <- renderTable({req(imported()$data);head(imported()$data,6)},rownames=FALSE)
+  output$column_mapping <- render_inputs({
+    data <- imported()$data;if(is.null(data)) return(p("Upload a valid file first."))
+    choices <- c("Please select"="",setNames(names(data),names(data)))
+    controls <- lapply(vragr_fields,function(field) i18n_select_input(paste0("column_",field),tagList(tags$small(class="field-code",field)," ",field_labels()[field]),choices,selected=if(field %in% names(data)) field else ""))
+    tagList(accordion(!!!lapply(.vragr_schema,function(group) accordion_panel(paste0("Item ",group$item," · ",group$en),
+      div(class="form-grid",controls[match(vapply(group$fields,`[[`,character(1),"name"),vragr_fields)]))),open=FALSE),
+      i18n_select_input("batch_id","Optional pseudonymous case ID",c("Use row numbers only"="",setNames(names(data),names(data))),selected=""))
+  })
+  selected_columns <- reactive(setNames(vapply(vragr_fields,function(field) input[[paste0("column_",field)]] %||% "",character(1)),vragr_fields))
+  mapping_values <- reactive({
+    data <- imported()$data;columns <- selected_columns()
+    if(is.null(data)||any(!columns %in% names(data))||anyDuplicated(columns)) return(NULL)
+    setNames(lapply(vragr_categories,function(field) observed_values(data[[columns[[field]]]])),vragr_categories)
+  })
+  output$category_mapping <- render_inputs({
+    values <- mapping_values();if(is.null(values)) return(p("Map all 75 inputs to distinct existing columns."))
+    if(any(lengths(values)>100L)) return(notice("More than 100 distinct categories: check the column mapping.",type="warning"))
+    raw <- imported()$data;columns <- selected_columns()
+    controls <- lapply(vragr_categories,function(field) div(h3(field_labels()[field]),div(class="mapping-grid",lapply(values[[field]],function(value){
+      column <- columns[[field]];default <- default_category(value,field,attr(raw[[column]],"labels"))
+      i18n_select_input(mapping_input_id(field,column,value),tagList(localize_ui("Value:")," ",span(value,`data-i18n-raw`="true")),
+        c("Not mapped"="",choice_labels(field),"No information"="__missing__"),selected=default)
+    }))))
+    accordion(!!!lapply(.vragr_schema,function(g){fields <- intersect(vapply(g$fields,`[[`,character(1),"name"),vragr_categories);if(!length(fields)) return(NULL)
+      accordion_panel(paste0("Item ",g$item," · ",g$en),controls[match(fields,vragr_categories)])}),open=FALSE)
+  })
+  current_spec <- reactive({
+    values <- mapping_values();columns <- selected_columns()
+    maps <- setNames(lapply(vragr_categories,function(field){
+      if(is.null(values)||length(values[[field]])>100L) return(character())
+      setNames(vapply(values[[field]],function(value) input[[mapping_input_id(field,columns[[field]],value)]] %||% "",character(1)),values[[field]])
+    }),vragr_categories)
+    list(file=if(is.null(input$batch_file)) NULL else as.list(input$batch_file),format=input$batch_format %||% "auto",
+      sheet=input$batch_sheet %||% 1L,decimal=input$batch_decimal %||% ".",columns=columns,maps=maps,id=input$batch_id %||% "")
+  })
+  batch_prepared <- reactive({
+    raw <- imported()$data;spec <- current_spec();values <- mapping_values()
+    if(is.null(raw)) return(list(data=NULL,error="Please upload a valid file."))
+    if(is.null(values)||any(lengths(values)>100L)) return(list(data=NULL,error="Please check the column and category mappings."))
+    tryCatch({
+      data <- prepare_vragr_data(raw,spec$columns,spec$maps,spec$decimal)
+      if(nzchar(spec$id)) {if(!spec$id %in% names(raw)) stop("Please select an existing ID column.");ids <- raw[[spec$id]]
+        if(anyNA(ids)||any(!nzchar(trimws(as.character(ids))))||anyDuplicated(ids)) stop("Case IDs must be present and unique in every row.")}
+      list(data=data,scores=vragr(data,strict=FALSE),issues=validate_vragr(data),error=NULL)
+    },error=function(e) list(data=NULL,error=conditionMessage(e)))
+  })
+  output$batch_validation_summary <- render_ui({
+    x <- batch_prepared();if(is.null(x$data)) return(notice(tx(x$error)))
+    good <- sum(x$scores$Status=="calculated");notice(paste(good,tx("scoreable rows"),"·",nrow(x$data)-good,tx("unscoreable rows")),
+      "Invalid rows remain in their original order with empty results and error explanations.",type=if(good<nrow(x$data)) "warning" else "success")
+  })
+  output$batch_issues <- renderTable({
+    x <- batch_prepared();req(x$data);bad <- which(x$scores$Status!="calculated");if(!length(bad)) return(NULL)
+    rows <- head(bad,30);messages <- vapply(rows,function(i){issues <- x$issues[x$issues$row==i,,drop=FALSE]
+      if(nrow(issues)) paste(paste(issues$field,tx(issues$message),sep=": "),collapse=" | ") else tx(x$scores$Error[i])},character(1))
+    setNames(data.frame(Row=rows,Issue=messages),tx(c("Row","Issue")))
+  },rownames=FALSE)
+  batch_saved <- reactiveVal(NULL)
+  observeEvent(input$batch_calculate,{
+    x <- batch_prepared();if(is.null(x$data)) return(showNotification(tx(x$error),type="warning"))
+    if(!any(x$scores$Status=="calculated")) return(showNotification(tx("No rows can be scored. Please review the error explanations."),type="warning"))
+    spec <- current_spec();time <- Sys.time();raw <- imported()$data
+    export <- make_vragr_export(x$data,x$scores,ids=if(nzchar(spec$id)) raw[[spec$id]] else NULL,timestamp=time,filename=input$batch_file$name)
+    batch_saved(list(spec=spec,scores=x$scores,time=time,export=export))
+  })
+  batch_ready <- reactive(same_batch_spec(if(is.null(batch_saved())) NULL else batch_saved()$spec,current_spec()))
+  output$batch_status <- render_ui({
+    if(is.null(batch_saved())) return(notice("No calculation yet. Check the file and mappings, then calculate."))
+    if(!batch_ready()) return(notice("Results out of date. Recalculate before downloading.",type="warning"))
+    notice(paste(tx("Calculated:"),batch_saved()$spec$file$name,"·",format_local_time(batch_saved()$time,language())),type="success")
+  })
+  output$batch_summary <- render_ui({req(batch_ready());div(class="table-scroll",tableOutput("batch_result_preview"))})
+  output$batch_result_preview <- renderTable({
+    req(batch_ready());x <- head(batch_saved()$scores,6)
+    setNames(data.frame(Row=seq_len(nrow(x)),Status=tx(ifelse(x$Status=="calculated","Calculated","Not calculable")),Score=format_number(x$Score,language()),
+      Category=format_number(x$Risk_Category,language()),Five_years=format_probability(x$Prob_5_years,language()),Twelve_years=format_probability(x$Prob_12_years,language())),tx(c("Row","Status","Score","Risk category","Five years","Twelve years")))
+  },rownames=FALSE)
+  output$batch_download_control <- render_ui(if(batch_ready()) downloadButton("batch_download","Download results",class="btn-primary") else tags$button("Download available after an up-to-date calculation",class="btn btn-secondary",disabled="disabled"))
+  output$batch_download <- downloadHandler(filename=function(){req(batch_ready());vragr_export_filename("Results",batch_saved()$time)},content=function(file){req(batch_ready());write.csv(batch_saved()$export,file,row.names=FALSE,na="",fileEncoding="UTF-8")})
+  output$example_download <- downloadHandler(filename=function() vragr_export_filename("Example_data",Sys.time()),content=function(file) file.copy(file.path(.app_root,"examples/example-data.csv"),file,overwrite=TRUE))
+  output$batch_plot <- renderPlot({
+    validate(need(batch_ready(),tx("The plot appears after an up-to-date calculation.")))
+    key <- input$batch_outcome %||% "Score";req(key %in% c("Score","Risk_Category"))
+    scores <- batch_saved()$scores;values <- scores[[key]][scores$Status=="calculated"]
+    ggplot(data.frame(Value=values),aes(Value))+geom_histogram(binwidth=1,boundary=.5,fill="#d3d3d3",colour="#60666c")+
+      scale_x_continuous(breaks=if(key=="Risk_Category") 1:9 else waiver())+
+      labs(x=tx(if(key=="Score") "VRAG-R score" else "Risk category"),y=tx("Number of cases"))+theme_minimal(base_size=13)
+  },alt=reactive(tx("Discrete distribution of calculated VRAG-R scores or risk categories.")))
 }
-
-
-
-#Lookup Item 2
-Lookup_item2 <- c("None", "Moderate", "Severe", NA)
-names(Lookup_item2) <- c("No problems", 
-                         "Slight or moderate discipline or attendance problems",
-                         "Severe (i.e., frequent or serious) behavior or attendance problems (e.g., truancy or disruptive behavior that persisted over several years or resulted in expulsion)",
-                         "No information")
-
-
-#Lookup Item 4
-Lookup_item4 <- c("No", "Yes", NA)
-names(Lookup_item4) <- c("Never married", 
-                         "Ever married (or lived common law in the same home for at least 6 months)",
-                         "No information")
-
-#Lookup Item 11
-Lookup_item11 <- c("None", "Only14", "Other", "Female14", NA)
-names(Lookup_item11) <- c("No known hands-on sex offenses",
-                          "All known hands-on sex offense(s) exclusively against children under age 14",
-                          "Committed hands-on sex offense(s) but not known to fit another category here",
-                          "At least one hands-on sex offense against a female victim 14 or older",
-                          "No information")
-
-
-
-####################
-###User Interface###
-####################
-ui <- navbarPage(
-  
-  #Application title
-  "VRAG-R - Calculator",
-  
-  #Position of Navbar
-  position = "fixed-top",
-  collapsible = TRUE,
-  
-  
-  #Tab for Single Calculation
-  tabPanel(title = "Single calculation",
-           
-           div(style = "height:80px"),
-           
-           #Title
-           h2("Single calculation"),
-           
-           p("Here you can compute the VRAG-R score for a single case. Please be aware that this application should only be used as a computation
-               aid. To obtain information on how to administer the VRAG-R and how to score the individual items, please study the test manual and/or 
-               attend an appropriate training event."),
-           
-           ###Item inputs###
-           
-           sidebarLayout(position = "right",
-             
-             mainPanel = mainPanel(width = 6,
-               
-               #Item 1
-               h3("Item 1 - Parents"),
-               
-               p("Lived with both biological parents to age 16 (except for death
-                of parent). Score no if offender did not live continuously with both biological
-                parents until age 16 except for death of one or both
-                parents. In case of death of parent(s), score as yes."),
-               
-               selectInput("item1", label = NULL, 
-                           choices = list("No", "Yes", "No information"),
-                           selected = "No information"),
-               
-               #Item 2
-               h3("Item 2 - Elementary school"),
-               
-               p("Elementary school maladjustment (up to and including eighth grade)."),
-               
-               radioButtons("item2", label = NULL, 
-                            choices = list("No problems", 
-                                           "Slight or moderate discipline or attendance problems",
-                                           "Severe (i.e., frequent or serious) behavior or attendance problems (e.g., truancy or disruptive behavior that persisted over several years or resulted in expulsion)",
-                                           "No information"),
-                            selected = "No information"),
-               
-               #Item 3
-               h3("Item 3 - History of alcohol or drug problems"),
-               
-               p(div(HTML("Please choose which of the following can be answered <em>yes</em>."))),
-               
-               selectInput("item3_1", 
-                           label = "Alcohol problem before age 18", 
-                           choices = list("No", "Yes", "No information"),
-                           selected = "No information"),
-               selectInput("item3_2", 
-                           label = "Illegal drug problem before age 18", 
-                           choices = list("No", "Yes", "No information"),
-                           selected = "No information"),
-               selectInput("item3_3", 
-                           label = "Alcohol involved in a prior offense", 
-                           choices = list("No", "Yes", "No information"),
-                           selected = "No information"),
-               selectInput("item3_4", 
-                           label = "Illegal drug involved in a prior offense", 
-                           choices = list("No", "Yes", "No information"),
-                           selected = "No information"),
-               selectInput("item3_5", 
-                           label = "Alcohol involved in current offense", 
-                           choices = list("No", "Yes", "No information"),
-                           selected = "No information"),
-               selectInput("item3_6", 
-                           label = "Illegal drug involved in current offense", 
-                           choices = list("No", "Yes", "No information"),
-                           selected = "No information"),            
-               
-               
-               #Item 4
-               h3("Item 4 - Marital status"),
-               
-               p("Marital status at time of index offense."),
-               
-               radioButtons("item4", label = NULL, 
-                            choices = list("Ever married (or lived common law in the same home for at least 6 months)",
-                                           "Never married",
-                                           "No information"),
-                            selected = "No information"),
-               
-               
-               
-               ),
-             
-             sidebarPanel = sidebarPanel(width = 6,
-               
-               #Sidebar Title
-               h2("Results"),
-               
-               p("This section presents the results of the VRAG-R based on the answers above. Missing items are handeled as advised in the
-            manual. This includes the prorating techniques for the items 3 and 12 as well as the prorating adjustment to the final
-            score. However, as also advised by the manual, the final score is only calculated if no more than four items are missing."),
-               
-               #Outputs
-               splitLayout(cellWidths = c("30%", "70%"),
-                           verbatimTextOutput("Vrag_score"),
-                           plotOutput("Vrag_percentile")),
-               
-               #Download
-               h2("Download"),
-               
-               p("Here, you can download the plot."),
-               
-               splitLayout(cellWidths = c("50%", "50%"),
-                           numericInput("plotwidth", label = "Width (in)", value = 20),
-                           numericInput("plotdpi", label = "DPI", value = 300)),
-               splitLayout(cellWidths = c("50%", "50%"),
-                           numericInput("plotheight", label = "Height (in)", value = 10),
-                           numericInput("plotfont", label = "Fontsize", value = 20)),
-               selectInput("plotformat", 
-                           label = "Format", 
-                           choices = list("png", "jpeg", "pdf", "svg", "tiff"),
-                           selected = "png"),
-               downloadButton("plotdownload", label = "Download plot")
-               
-             )
-           ),
-          
-           #Item 5
-           h3("Item 5 - Nonviolent offenses"),
-           
-           p("Criminal history score for convictions or charges for nonviolent offenses before index offense 
-               (from the Cormier–Lang system). Please provide the number of occurences for each offense category."),
-           
-           
-           radioButtons("item5_info", 
-                        label = "Any information on nonviolent criminal history?", 
-                        choices = list("No information",
-                                       "Information available")),
-           
-           conditionalPanel(condition = "input.item5_info == 'Information available'",
-                            
-                            splitLayout(cellWidths = c("33%", "33%", "33%"),
-                                        numericInput("item5_1", label = "Robbery (bank, store)", value = 0),
-                                        numericInput("item5_2", label = "Robbery (purse snatching)", value = 0),
-                                        numericInput("item5_3", label = "Threatening (uttering threats)", value = 0)),
-                            splitLayout(cellWidths = c("33%", "33%", "33%"),
-                                        numericInput("item5_4", label = "Arson and fire setting (church, house, barn)", value = 0),
-                                        numericInput("item5_5", label = "Arson and fire setting (garbage can), false alarm of fire", value = 0),
-                                        numericInput("item5_6", label = "Severe theft (includes car theft and possession of stolen property over a value of $5,000)", value = 0)),
-                            splitLayout(cellWidths = c("33%", "33%", "33%"),
-                                        numericInput("item5_7", label = "Mischief to public or private property over a value of $5,000", value = 0),
-                                        numericInput("item5_8", label = "Break and enter and commit indictable offense (burglary)", value = 0),
-                                        numericInput("item5_9", label = "Break and enter (includes break and enter with intent to commit an offense)", value = 0)),
-                            splitLayout(cellWidths = c("33%", "33%", "33%"),
-                                        numericInput("item5_10", label = "Theft (includes possession of stolen property under a value of $5,000)", value = 0),
-                                        numericInput("item5_11", label = "Mischief to public or private property under a value of $5,000", value = 0),
-                                        numericInput("item5_12", label = "Fraud (extortion, embezzlement)", value = 0)),
-                            splitLayout(cellWidths = c("33%", "33%", "33%"),
-                                        numericInput("item5_13", label = "Fraud (forged check, impersonation)", value = 0),
-                                        numericInput("item5_14", label = "Indecent exposure", value = 0),
-                                        numericInput("item5_15", label = "Causing a disturbance", value = 0)),
-                            splitLayout(cellWidths = c("33%", "33%", "33%"),
-                                        numericInput("item5_16", label = "Conspiracy", value = 0),
-                                        numericInput("item5_17", label = "Contributing to juvenile delinquency", value = 0),
-                                        numericInput("item5_18", label = "Criminal negligence, criminal harassment", value = 0)),
-                            splitLayout(cellWidths = c("33%", "33%", "33%"),
-                                        numericInput("item5_19", label = "Criminal trespass, trespassing at night", value = 0),
-                                        numericInput("item5_20", label = "Dangerous driving, impaired driving (driving while intoxicated)", value = 0),
-                                        numericInput("item5_21", label = "Fail to provide necessities of life", value = 0)),
-                            splitLayout(cellWidths = c("33%", "33%", "33%"),
-                                        numericInput("item5_22", label = "Obstructing peace officer (including resisting arrest), obstructing justice", value = 0),
-                                        numericInput("item5_23", label = "Possession of housebreaking tools", value = 0),
-                                        numericInput("item5_24", label = "Possession/misuse/careless use of/carrying a prohibited or restricted weapon", value = 0)),
-                            splitLayout(cellWidths = c("33%", "33%", "33%"),
-                                        numericInput("item5_25", label = "Procuring or living on the avails of the prostitution of another person", value = 0),
-                                        numericInput("item5_26", label = "Trafficking in narcotics", value = 0),
-                                        numericInput("item5_27", label = "Wearing a disguise with the intent to commit an offense", value = 0))
-                            
-           ),
-           
-           #Item 6
-           h3("Item 6 - Conditional release"),
-           
-           p("Failure on conditional release (includes parole violation or revocation, breach of or failure to comply 
-                with recognizance or probation, bail violation, and any new charges, including the index offense, 
-                while on a conditional release)."),
-           
-           selectInput("item6", label = NULL, 
-                       choices = list("No", "Yes", "No information"),
-                       selected = "No information"),
-           
-           #Item 7
-           h3("Item 7 - Age"),
-           
-           p("Age at index offense (at most recent birthday)."),
-           
-           radioButtons("item7_info", 
-                        label = NULL, 
-                        choices = list("No information",
-                                       "Information available")),
-           
-           conditionalPanel(condition = "input.item7_info == 'Information available'",
-                            numericInput("item7", label = NULL, value = 20)),
-           
-           #Item 8
-           h3("Item 8 - Violent offenses"),
-           
-           p("Criminal history score for convictions or charges for violent offenses before index offense 
-               (from the Cormier–Lang system). Please provide the number of occurences for each offense category."),
-           
-           radioButtons("item8_info", 
-                        label = "Any information on violent criminal history?", 
-                        choices = list("No information",
-                                       "Information available")),
-           
-           conditionalPanel(condition = "input.item8_info == 'Information available'",
-                            
-                            splitLayout(cellWidths = c("33%", "33%", "33%"),
-                                        numericInput("item8_1", label = "Homicide (murder, manslaughter, criminal negligence causing death)", value = 0),
-                                        numericInput("item8_2", label = "Attempted murder", value = 0),
-                                        numericInput("item8_3", label = "Kidnapping, abduction, and forcible confinement", value = 0)),
-                            splitLayout(cellWidths = c("33%", "33%", "33%"),
-                                        numericInput("item8_4", label = "Aggravated assault, choking, administering a noxious substance", value = 0),
-                                        numericInput("item8_5", label = "Wounding, assault CBH with intent to wound", value = 0),
-                                        numericInput("item8_6", label = "Assault CBH, Criminal negligence CBH, Impaired driving CBH", value = 0)),
-                            splitLayout(cellWidths = c("33%", "33%", "33%"),
-                                        numericInput("item8_7", label = "Assault with a weapon", value = 0),
-                                        numericInput("item8_8", label = "Assault, assaulting a peace officer", value = 0),
-                                        numericInput("item8_9", label = "Threatening with a weapon, dangerous use of/pointing firearm", value = 0)),
-                            splitLayout(cellWidths = c("33%", "33%", "33%"),
-                                        numericInput("item8_10", label = "Aggravated sexual assault, sexual assault CBH", value = 0),
-                                        numericInput("item8_11", label = "Sexual assault with a weapon", value = 0),
-                                        numericInput("item8_12", label = "Sexual assault, gross indecency (vaginal or anal penetration; victim forced to fellate offender)", value = 0)),
-                            splitLayout(cellWidths = c("33%", "33%", "33%"),
-                                        numericInput("item8_13", label = "Sexual assault (attempted rape, indecent assault)", value = 0),
-                                        numericInput("item8_14", label = "Gross indecency (offender fellates or performs cunnilingus on victim)", value = 0),
-                                        numericInput("item8_15", label = "Sexual assault (sexual interference, invitation to sexual touching)", value = 0)),
-                            splitLayout(cellWidths = c("33%", "33%", "33%"),
-                                        numericInput("item8_16", label = "Armed robbery (bank, store)", value = 0),
-                                        numericInput("item8_17", label = "Robbery with violence", value = 0),
-                                        numericInput("item8_18", label = "Armed robbery (not a bank or store)", value = 0))
-                            
-           ),
-           
-           #Item 9
-           h3("Item 9 - Prior admissions to correctional institutions"),
-           
-           p("Number of prior admissions (of one day or more) to correctional
-              institutions (youth detention center, jail, federal or provincial
-              correctional facility) for offenses before the index offense. Do
-              not count transfers from one facility to another, or overnight
-              stays in jail unless part of a sentence or presentence custody."),
-           
-           radioButtons("item9_info", 
-                        label = NULL, 
-                        choices = list("No information",
-                                       "Information available")),
-           
-           conditionalPanel(condition = "input.item9_info == 'Information available'",
-                            numericInput("item9", label = NULL, value = 0)),
-           
-           #Item 10
-           h3("Item 10 - Conduct disorder"),
-           
-           p("Pertaining to behavior before age 15."),
-           p(div(HTML("Please choose which of the following can be answered <em>yes</em>."))),
-           
-           selectInput("item10_1", 
-                       label = "Repeated truancy", 
-                       choices = list("No", "Yes", "No information"),
-                       selected = "No information"),
-           selectInput("item10_2", 
-                       label = "School suspension or expulsion", 
-                       choices = list("No", "Yes", "No information"),
-                       selected = "No information"),
-           selectInput("item10_3", 
-                       label = "Delinquency brought to the attention of juvenile court", 
-                       choices = list("No", "Yes", "No information"),
-                       selected = "No information"),
-           selectInput("item10_4", 
-                       label = "Running away from home at least twice", 
-                       choices = list("No", "Yes", "No information"),
-                       selected = "No information"),
-           selectInput("item10_5", 
-                       label = "Persistent lying", 
-                       choices = list("No", "Yes", "No information"),
-                       selected = "No information"),
-           selectInput("item10_6", 
-                       label = "Repeated sexual intercourse within a casual relationship", 
-                       choices = list("No", "Yes", "No information"),
-                       selected = "No information"),
-           selectInput("item10_7", 
-                       label = "Repeated drunkenness or substance abuse", 
-                       choices = list("No", "Yes", "No information"),
-                       selected = "No information"),
-           selectInput("item10_8", 
-                       label = "Thefts", 
-                       choices = list("No", "Yes", "No information"),
-                       selected = "No information"),
-           selectInput("item10_9", 
-                       label = "Vandalism", 
-                       choices = list("No", "Yes", "No information"),
-                       selected = "No information"),
-           selectInput("item10_10", 
-                       label = "School grades markedly below expectations in relation to estimated or known IQ", 
-                       choices = list("No", "Yes", "No information"),
-                       selected = "No information"),
-           selectInput("item10_11", 
-                       label = "Chronic violations at home and/or school other than truancy", 
-                       choices = list("No", "Yes", "No information"),
-                       selected = "No information"),
-           selectInput("item10_12", 
-                       label = "Involvement in fights", 
-                       choices = list("No", "Yes", "No information"),
-                       selected = "No information"),
-           
-           #Item 11
-           h3("Item 11 - Sex offending history"),
-           
-           p("Consider entire history up to and including index offense,
-              and count all offenses for which there is convincing evidence
-              whether it resulted in a charge or conviction or not."),
-           
-           radioButtons("item11", label = NULL, 
-                        choices = list("No known hands-on sex offenses",
-                                       "All known hands-on sex offense(s) exclusively against children under age 14",
-                                       "Committed hands-on sex offense(s) but not known to fit another category here",
-                                       "At least one hands-on sex offense against a female victim 14 or older",
-                                       "No information"),
-                        selected = "No information"),
-           
-           #Item 12
-           h3("Item 12 - Antisociality"),
-           
-           p("Score Facet 4 of Psychopathy Checklist—Revised (PCL–R)."),
-           
-           selectInput("item12_1", 
-                       label = "Poor Behavioral Controls", 
-                       choices = list("0", "1", "2", "No information"),
-                       selected = "No information"),
-           selectInput("item12_2", 
-                       label = "Early Behavioral Problems", 
-                       choices = list("0", "1", "2", "No information"),
-                       selected = "No information"),
-           selectInput("item12_3", 
-                       label = "Juvenile Delinquency", 
-                       choices = list("0", "1", "2", "No information"),
-                       selected = "No information"),
-           selectInput("item12_4", 
-                       label = "Revocation of Conditional Release", 
-                       choices = list("0", "1", "2", "No information"),
-                       selected = "No information"),
-           selectInput("item12_5", 
-                       label = "Criminal Versatility", 
-                       choices = list("0", "1", "2", "No information"),
-                       selected = "No information"),
-  
-          div(style = "height:90px")),
-  
-  #Tab for calculation on data set
-  tabPanel(title = "Calculation on dataset", 
-           
-           div(style = "height:80px"),
-           
-           #Title
-           h2("Calculation on dataset"),
-           
-           #Instructions
-           p("This section provides the possibility to calculate VRAG-R scores for a whole dataset in one go. Follow the instructions below to get your scores."),
-           
-           #Upload  
-           h3("1. Data Upload"),
-           
-           p("Select the format of your data using the drop-down menu. The following formats are supported: ",
-             a(".xlsx (Excel)", href = "https://www.rdocumentation.org/packages/readxl/versions/0.1.1/topics/read_excel"), ", ",
-             a(".csv", href = "https://www.rdocumentation.org/packages/readr/versions/2.1.3/topics/read_delim"), ", ",
-             a(".csv (European)", href = "https://www.rdocumentation.org/packages/readr/versions/2.1.3/topics/read_delim"), ", ",
-             a(".txt", href = "https://www.rdocumentation.org/packages/readr/versions/2.1.3/topics/read_delim"), ", ",
-             a(".sav (SPSS)", href = "https://www.rdocumentation.org/packages/haven/versions/2.5.1/topics/read_spss"), "."),
-           
-           selectInput("data_format", label = "Choose your data format", choices = list("xlsx (Excel)", "csv", "csv (European)", "txt", "sav (SPSS)")),
-           
-           p("Use this button to upload your data."),
-           fileInput("vrag_input", label = "Upload dataset", accept = c(".xlsx", ".csv", ".txt", ".sav")),
-           
-           #Variable names
-           h3("2. Choose variables"),
-           
-           p("The data must contain a variable for each possible data entry within the VRAG-R. Below, you can choose which variables from your dataset are to be used for the calculation. 
-             Please give the exact variable name for each item. You find further information about the necessary format of the variables in parantheses. The categorical variables may only contain 
-             the category names that are indicated here. In addition, the categorical variables and binary variables (No/Yes) must be provided as variables of character strings (no labelled numerics in SPSS). 
-             Every item may also contain missing values (blank cells in Excel and correctly defined missings in SPSS)."),
-           
-           splitLayout(cellWidths = c("33%", "33%", "33%"),
-                       textInput("nameitem1", "Item 1 - Parents (No/Yes)", value = "Item_1"),
-                       textInput("nameitem2", "Item 2 - Elementary school (None/Moderate/Severe)", value = "Item_2")),
-           splitLayout(cellWidths = c("33%", "33%", "33%"),
-                       textInput("nameitem3_1", "Item 3 - Alcohol problems < 18 (No/Yes)", value = "Item_3_1"),
-                       textInput("nameitem3_2", "Item 3 - Drug problems < 18 (No/Yes)", value = "Item_3_2"),
-                       textInput("nameitem3_3", "Item 3 - Alcohol in prior offense (No/Yes)", value = "Item_3_3")),
-           splitLayout(cellWidths = c("33%", "33%", "33%"),
-                       textInput("nameitem3_4", "Item 3 - Drug in prior offense (No/Yes)", value = "Item_3_4"),
-                       textInput("nameitem3_5", "Item 3 - Alcohol in current offense (No/Yes)", value = "Item_3_5"),
-                       textInput("nameitem3_6", "Item 3 - Drug in current offense (No/Yes)", value = "Item_3_6")),
-           splitLayout(cellWidths = c("33%", "33%", "33%"),
-                       textInput("nameitem4", "Item 4 - Marital status (No/Yes)", value = "Item_4")),
-           splitLayout(cellWidths = c("33%", "33%", "33%"),
-                       textInput("nameitem5_1", "Item 5 - Robbery bank (Count)", value = "Item_5_1"),
-                       textInput("nameitem5_2", "Item 5 - Robbery purse (Count)", value = "Item_5_2"),
-                       textInput("nameitem5_3", "Item 5 - Threatening (Count)", value = "Item_5_3")),
-           splitLayout(cellWidths = c("33%", "33%", "33%"),
-                       textInput("nameitem5_4", "Item 5 - Arson house (Count)", value = "Item_5_4"),
-                       textInput("nameitem5_5", "Item 5 - Arson garbage (Count)", value = "Item_5_5"),
-                       textInput("nameitem5_6", "Item 5 - Severe theft (Count)", value = "Item_5_6")),
-           splitLayout(cellWidths = c("33%", "33%", "33%"),
-                       textInput("nameitem5_7", "Item 5 - Severe mischief (Count)", value = "Item_5_7"),
-                       textInput("nameitem5_8", "Item 5 - Burglary (Count)", value = "Item_5_8"),
-                       textInput("nameitem5_9", "Item 5 - Break and enter intent (Count)", value = "Item_5_9")),
-           splitLayout(cellWidths = c("33%", "33%", "33%"),
-                       textInput("nameitem5_10", "Item 5 - Theft (Count)", value = "Item_5_10"),
-                       textInput("nameitem5_11", "Item 5 - Mischief (Count)", value = "Item_5_11"),
-                       textInput("nameitem5_12", "Item 5 - Fraud extortion (Count)", value = "Item_5_12")),
-           splitLayout(cellWidths = c("33%", "33%", "33%"),
-                       textInput("nameitem5_13", "Item 5 - Fraud check (Count)", value = "Item_5_13"),
-                       textInput("nameitem5_14", "Item 5 - Indecent exposure (Count)", value = "Item_5_14"),
-                       textInput("nameitem5_15", "Item 5 - Disturbance (Count)", value = "Item_5_15")),
-           splitLayout(cellWidths = c("33%", "33%", "33%"),
-                       textInput("nameitem5_16", "Item 5 - Conspiracy (Count)", value = "Item_5_16"),
-                       textInput("nameitem5_17", "Item 5 - Juvenile del. (Count)", value = "Item_5_17"),
-                       textInput("nameitem5_18", "Item 5 - Negligence (Count)", value = "Item_5_18")),
-           splitLayout(cellWidths = c("33%", "33%", "33%"),
-                       textInput("nameitem5_19", "Item 5 - Trespassing (Count)", value = "Item_5_19"),
-                       textInput("nameitem5_20", "Item 5 - Dangerous driving (Count)", value = "Item_5_20"),
-                       textInput("nameitem5_21", "Item 5 - Fail to provide (Count)", value = "Item_5_21")),
-           splitLayout(cellWidths = c("33%", "33%", "33%"),
-                       textInput("nameitem5_22", "Item 5 - Obstructing officer (Count)", value = "Item_5_22"),
-                       textInput("nameitem5_23", "Item 5 - Housebreaking tools (Count)", value = "Item_5_23"),
-                       textInput("nameitem5_24", "Item 5 - Weapon (Count)", value = "Item_5_24")),
-           splitLayout(cellWidths = c("33%", "33%", "33%"),
-                       textInput("nameitem5_25", "Item 5 - Prostitution (Count)", value = "Item_5_25"),
-                       textInput("nameitem5_26", "Item 5 - Narcotics (Count)", value = "Item_5_26"),
-                       textInput("nameitem5_27", "Item 5 - Disguise (Count)", value = "Item_5_27")),
-           splitLayout(cellWidths = c("33%", "33%", "33%"),
-                       textInput("nameitem6", "Item 6 - Conditional release (No/Yes)", value = "Item_6"),
-                       textInput("nameitem7", "Item 7 - Age (Age)", value = "Item_7")),
-           splitLayout(cellWidths = c("33%", "33%", "33%"),
-                       textInput("nameitem8_1", "Item 8 - Homicide (Count)", value = "Item_8_1"),
-                       textInput("nameitem8_2", "Item 8 - Attempted murder (Count)", value = "Item_8_2"),
-                       textInput("nameitem8_3", "Item 8 - Kidnapping (Count)", value = "Item_8_3")),
-           splitLayout(cellWidths = c("33%", "33%", "33%"),
-                       textInput("nameitem8_4", "Item 8 - Aggravated assault (Count)", value = "Item_8_4"),
-                       textInput("nameitem8_5", "Item 8 - Wounding (Count)", value = "Item_8_5"),
-                       textInput("nameitem8_6", "Item 8 - Assault CBH (Count)", value = "Item_8_6")),
-           splitLayout(cellWidths = c("33%", "33%", "33%"),
-                       textInput("nameitem8_7", "Item 8 - Assault with weapon (Count)", value = "Item_8_7"),
-                       textInput("nameitem8_8", "Item 8 - Assault (Count)", value = "Item_8_8"),
-                       textInput("nameitem8_9", "Item 8 - Threat with weapon (Count)", value = "Item_8_9")),
-           splitLayout(cellWidths = c("33%", "33%", "33%"),
-                       textInput("nameitem8_10", "Item 8 - Aggravated sex. assault (Count)", value = "Item_8_10"),
-                       textInput("nameitem8_11", "Item 8 - Sex. assault with weapon (Count)", value = "Item_8_11"),
-                       textInput("nameitem8_12", "Item 8 - Sex. assault penetration (Count)", value = "Item_8_12")),
-           splitLayout(cellWidths = c("33%", "33%", "33%"),
-                       textInput("nameitem8_13", "Item 8 - Sex. assault attemted rape (Count)", value = "Item_8_13"),
-                       textInput("nameitem8_14", "Item 8 - Gross indecency (Count)", value = "Item_8_14"),
-                       textInput("nameitem8_15", "Item 8 - Sex. assault interference (Count)", value = "Item_8_15")),
-           splitLayout(cellWidths = c("33%", "33%", "33%"),
-                       textInput("nameitem8_16", "Item 8 - Armed robbery bank/store (Count)", value = "Item_8_16"),
-                       textInput("nameitem8_17", "Item 8 - Robbery with violence (Count)", value = "Item_8_17"),
-                       textInput("nameitem8_18", "Item 8 - Armed robbery (Count)", value = "Item_8_18")),
-           splitLayout(cellWidths = c("33%", "33%", "33%"),
-                       textInput("nameitem9", "Item 9 - Prior admissions to correctional institutions (Count)", value = "Item_9")),
-           splitLayout(cellWidths = c("33%", "33%", "33%"),
-                       textInput("nameitem10_1", "Item 10 - Truancy (No/Yes)", value = "Item_10_1"),
-                       textInput("nameitem10_2", "Item 10 - School suspension (No/Yes)", value = "Item_10_2"),
-                       textInput("nameitem10_3", "Item 10 - Delinquency court (No/Yes)", value = "Item_10_3")),
-           splitLayout(cellWidths = c("33%", "33%", "33%"),
-                       textInput("nameitem10_4", "Item 10 - Running away (No/Yes)", value = "Item_10_4"),
-                       textInput("nameitem10_5", "Item 10 - Lying (No/Yes)", value = "Item_10_5"),
-                       textInput("nameitem10_6", "Item 10 - Sexual intercourse (No/Yes)", value = "Item_10_6")),
-           splitLayout(cellWidths = c("33%", "33%", "33%"),
-                       textInput("nameitem10_7", "Item 10 - Drunkenness/drugs (No/Yes)", value = "Item_10_7"),
-                       textInput("nameitem10_8", "Item 10 - Theft (No/Yes)", value = "Item_10_8"),
-                       textInput("nameitem10_9", "Item 10 - Vandalism (No/Yes)", value = "Item_10_9")),
-           splitLayout(cellWidths = c("33%", "33%", "33%"),
-                       textInput("nameitem10_10", "Item 10 - Bad school grades (No/Yes)", value = "Item_10_10"),
-                       textInput("nameitem10_11", "Item 10 - Other violations (No/Yes)", value = "Item_10_11"),
-                       textInput("nameitem10_12", "Item 10 - Fights (No/Yes)", value = "Item_10_12")),
-           splitLayout(cellWidths = c("33%", "33%", "33%"),
-                       textInput("nameitem11", "Item 11 - Sex offending history (None/Only14/Other/Female14)", value = "Item_11")),
-           splitLayout(cellWidths = c("33%", "33%", "33%"),
-                       textInput("nameitem12_1", "Item 12 - Behavioral controls (0-2)", value = "Item_12_1"),
-                       textInput("nameitem12_2", "Item 12 - Early problems (0-2)", value = "Item_12_2"),
-                       textInput("nameitem12_3", "Item 12 - Juvenile delinquency (0-2)", value = "Item_12_3")),
-           splitLayout(cellWidths = c("33%", "33%", "33%"),
-                       textInput("nameitem12_4", "Item 12 - Conditional release (0-2)", value = "Item_12_4"),
-                       textInput("nameitem12_5", "Item 12 - Criminal versatility (0-2)", value = "Item_12_5")),
-           
-           
-           #Compute Scores
-           h3("3. Compute scores"),
-           
-           p("Use this button to compute the VRAG scores. This may take a moment (depending on the size of your data). 
-              Observe the progress bar in the lower right-hand corner to check on the progress of the calculation."),
-           
-           actionButton("calc", "Calculate VRAG-R scores"),
-           
-           div(style = "height:30px"),
-           
-           #Diagnostics
-           h3("4. Check the distributions"),
-           
-           p("The plot shows the distribution of the VRAG-Score within your sample. Use it to check if the computation was successful."),
-           
-           plotOutput("Distplot"),
-           
-           #Download
-           h3("5. Download"),
-           
-           div(style = "border-style: solid; border-color: black; border-width: 2px; padding: 10px; border-radius: 8px;",
-               p("This button can be used to save the computed VRAG-R scores as a .csv-file (European)."),
-               downloadButton("downloadData", "Download")),
-           
-           div(style = "height:30px")
-           
-           
-      ),
-  
-  #About the app
-  tabPanel(title = "About",
-           
-           div(style = "height:70px"),
-           
-           p("This VRAG-R calculator is based on the German manual by", 
-             a("Rettenberger, Hertz and Eher (2017)", href = "https://krimpub.krimz.de/frontdoor/deliver/index/docId/40/file/bm-online8.pdf"),  
-             "and the original discription by ", 
-             a("Harris, Rice, Quinsey and Cormier (2015).", href = "https://psycnet.apa.org/record/2014-38766-000")),
-           p("Please do not upload more data than necessary and adhere to existing data protection regulations.
-               This app is running on shinyapps.io. More information regarding this cloud service can be found", 
-             a("here.", href = "https://docs.rstudio.com/shinyapps.io/security-and-compliance.html")),
-           p("The R-functions that are used to calculate the VRAG-R scores in this app are accessible on  ", a("github.", href = "https://github.com/MertenNeumann/VRAGR_Calculator")),
-           div(style = "height:30px"),
-           p("Have Fun!"),
-           p("Merten Neumann"),
-           p(a("Researchgate", href = "https://www.researchgate.net/profile/Merten-Neumann"), ",",
-             a("Scholar", href = "https://scholar.google.com/citations?user=QjfiK8gAAAAJ&hl=de"))
-           
-  )
-  
-)
-
-##################
-###Server logic###
-##################
-
-server <- function(input, output) {
-  
-  #Compute single score
-  Result_list_single <- reactive({
-    
-    Item_1 <- na_if(input$item1, "No information")
-    
-    Item_2 <- unname(Lookup_item2[input$item2])
-    
-    Item_3_1 <- na_if(input$item3_1, "No information")
-    Item_3_2 <- na_if(input$item3_2, "No information")
-    Item_3_3 <- na_if(input$item3_3, "No information")
-    Item_3_4 <- na_if(input$item3_4, "No information")
-    Item_3_5 <- na_if(input$item3_5, "No information")
-    Item_3_6 <- na_if(input$item3_6, "No information")
-    
-    Item_4 <- unname(Lookup_item4[input$item4])
-    
-    Item_5_1 <- ifelse(input$item5_info == "No information", NA, input$item5_1)
-    Item_5_2 <- ifelse(input$item5_info == "No information", NA, input$item5_2)
-    Item_5_3 <- ifelse(input$item5_info == "No information", NA, input$item5_3)
-    Item_5_4 <- ifelse(input$item5_info == "No information", NA, input$item5_4)
-    Item_5_5 <- ifelse(input$item5_info == "No information", NA, input$item5_5)
-    Item_5_6 <- ifelse(input$item5_info == "No information", NA, input$item5_6)
-    Item_5_7 <- ifelse(input$item5_info == "No information", NA, input$item5_7)
-    Item_5_8 <- ifelse(input$item5_info == "No information", NA, input$item5_8)
-    Item_5_9 <- ifelse(input$item5_info == "No information", NA, input$item5_9)
-    Item_5_10 <- ifelse(input$item5_info == "No information", NA, input$item5_10)
-    Item_5_11 <- ifelse(input$item5_info == "No information", NA, input$item5_11)
-    Item_5_12 <- ifelse(input$item5_info == "No information", NA, input$item5_12)
-    Item_5_13 <- ifelse(input$item5_info == "No information", NA, input$item5_13)
-    Item_5_14 <- ifelse(input$item5_info == "No information", NA, input$item5_14)
-    Item_5_15 <- ifelse(input$item5_info == "No information", NA, input$item5_15)
-    Item_5_16 <- ifelse(input$item5_info == "No information", NA, input$item5_16)
-    Item_5_17 <- ifelse(input$item5_info == "No information", NA, input$item5_17)
-    Item_5_18 <- ifelse(input$item5_info == "No information", NA, input$item5_18)
-    Item_5_19 <- ifelse(input$item5_info == "No information", NA, input$item5_19)
-    Item_5_20 <- ifelse(input$item5_info == "No information", NA, input$item5_20)
-    Item_5_21 <- ifelse(input$item5_info == "No information", NA, input$item5_21)
-    Item_5_22 <- ifelse(input$item5_info == "No information", NA, input$item5_22)
-    Item_5_23 <- ifelse(input$item5_info == "No information", NA, input$item5_23)
-    Item_5_24 <- ifelse(input$item5_info == "No information", NA, input$item5_24)
-    Item_5_25 <- ifelse(input$item5_info == "No information", NA, input$item5_25)
-    Item_5_26 <- ifelse(input$item5_info == "No information", NA, input$item5_26)
-    Item_5_27 <- ifelse(input$item5_info == "No information", NA, input$item5_27)
-    
-    Item_6 <- na_if(input$item6, "No information")
-    
-    Item_7 <- ifelse(input$item7_info == "No information", NA, input$item7)
-    
-    Item_8_1 <- ifelse(input$item8_info == "No information", NA, input$item8_1)
-    Item_8_2 <- ifelse(input$item8_info == "No information", NA, input$item8_2)
-    Item_8_3 <- ifelse(input$item8_info == "No information", NA, input$item8_3)
-    Item_8_4 <- ifelse(input$item8_info == "No information", NA, input$item8_4)
-    Item_8_5 <- ifelse(input$item8_info == "No information", NA, input$item8_5)
-    Item_8_6 <- ifelse(input$item8_info == "No information", NA, input$item8_6)
-    Item_8_7 <- ifelse(input$item8_info == "No information", NA, input$item8_7)
-    Item_8_8 <- ifelse(input$item8_info == "No information", NA, input$item8_8)
-    Item_8_9 <- ifelse(input$item8_info == "No information", NA, input$item8_9)
-    Item_8_10 <- ifelse(input$item8_info == "No information", NA, input$item8_10)
-    Item_8_11 <- ifelse(input$item8_info == "No information", NA, input$item8_11)
-    Item_8_12 <- ifelse(input$item8_info == "No information", NA, input$item8_12)
-    Item_8_13 <- ifelse(input$item8_info == "No information", NA, input$item8_13)
-    Item_8_14 <- ifelse(input$item8_info == "No information", NA, input$item8_14)
-    Item_8_15 <- ifelse(input$item8_info == "No information", NA, input$item8_15)
-    Item_8_16 <- ifelse(input$item8_info == "No information", NA, input$item8_16)
-    Item_8_17 <- ifelse(input$item8_info == "No information", NA, input$item8_17)
-    Item_8_18 <- ifelse(input$item8_info == "No information", NA, input$item8_18)
-    
-    Item_9 <- ifelse(input$item9_info == "No information", NA, input$item9)
-    
-    Item_10_1 <- na_if(input$item10_1, "No information")
-    Item_10_2 <- na_if(input$item10_2, "No information")
-    Item_10_3 <- na_if(input$item10_3, "No information")
-    Item_10_4 <- na_if(input$item10_4, "No information")
-    Item_10_5 <- na_if(input$item10_5, "No information")
-    Item_10_6 <- na_if(input$item10_6, "No information")
-    Item_10_7 <- na_if(input$item10_7, "No information")
-    Item_10_8 <- na_if(input$item10_8, "No information")
-    Item_10_9 <- na_if(input$item10_9, "No information")
-    Item_10_10 <- na_if(input$item10_10, "No information")
-    Item_10_11 <- na_if(input$item10_11, "No information")
-    Item_10_12 <- na_if(input$item10_12, "No information")
-    
-    Item_11 <- unname(Lookup_item11[input$item11])
-    
-    Item_12_1 <- as.numeric(na_if(input$item12_1, "No information"))
-    Item_12_2 <- as.numeric(na_if(input$item12_2, "No information"))
-    Item_12_3 <- as.numeric(na_if(input$item12_3, "No information"))
-    Item_12_4 <- as.numeric(na_if(input$item12_4, "No information"))
-    Item_12_5 <- as.numeric(na_if(input$item12_5, "No information"))
-    
-    Result <- compute_vrag(Item_1,
-                           Item_2,
-                           Item_3_1, Item_3_2, Item_3_3, Item_3_4, Item_3_5, Item_3_6,
-                           Item_4,
-                           Item_5_1,Item_5_2,Item_5_3,Item_5_4,Item_5_5, Item_5_6, Item_5_7, Item_5_8, Item_5_9, Item_5_10,
-                           Item_5_11, Item_5_12, Item_5_13, Item_5_14, Item_5_15, Item_5_16, Item_5_17, Item_5_18, Item_5_19, Item_5_20,
-                           Item_5_21, Item_5_22, Item_5_23, Item_5_24, Item_5_25, Item_5_26, Item_5_27,
-                           Item_6,
-                           Item_7,
-                           Item_8_1, Item_8_2, Item_8_3, Item_8_4, Item_8_5, Item_8_6, Item_8_7, Item_8_8, Item_8_9, Item_8_10,
-                           Item_8_11, Item_8_12, Item_8_13, Item_8_14, Item_8_15, Item_8_16, Item_8_17, Item_8_18,
-                           Item_9,
-                           Item_10_1, Item_10_2, Item_10_3, Item_10_4, Item_10_5, Item_10_6, Item_10_7, Item_10_8, Item_10_9, Item_10_10,
-                           Item_10_11, Item_10_12,
-                           Item_11,
-                           Item_12_1, Item_12_2, Item_12_3, Item_12_4,Item_12_5)
-    
-    Result
-    
-  })
-  
-  #Build plot
-  Result_plot <- reactive({
-    
-    Result <- Result_list_single()
-    
-    crit_value <- qnorm(Result[["Percentile"]]/100)
-    
-    Result_Plot <- ggplot(data.frame(x = c(-3.5, 3.5)), aes(x)) +
-      stat_function(fun = dnorm,
-                    geom = "line",
-                    color = "black") +
-      stat_function(fun = dnorm,
-                    geom = "area",
-                    fill = "grey",
-                    xlim = c(-3.5, crit_value)) +
-      geom_segment(x = crit_value, xend = crit_value,
-                   y = 0, yend = dnorm(crit_value), 
-                   color = "red") +
-      annotate(geom = "text", x = 2.0, y = 0.3, label = paste(c('VRAG-R score = ', Result[['Score']], 
-                                                                '\nRisk category = ', Result[['Risk Category']],
-                                                                '\nPercentile = ', Result[['Percentile']],
-                                                                '\nMissing items = ', Result[['Number of missing items']]),
-                                                              collapse = ''),
-               size = 5) +
-      xlab("z score") +
-      ylab("density") +
-      theme_classic()+
-      theme(text = element_text(size = 15))
-    
-    Result_Plot
-    
-  })
-  
-  #Display single results
-  output$Vrag_score <- renderText({
-    
-    Result <- Result_list_single()
-    
-    paste(c("Main Results",
-            "\nVRAG-R score = ", Result[["Score"]], 
-            "\nRisk category = ", Result[["Risk Category"]],
-            "\nPercentile = ", Result[["Percentile"]],
-            "\nMissing items = ", Result[["Number of missing items"]],
-            "\n",
-            "\nItem Values",
-            "\nItem 1 = ", Result[["Items"]][["Item 1"]],
-            "\nItem 2 = ", Result[["Items"]][["Item 2"]],
-            "\nItem 3 = ", Result[["Items"]][["Item 3"]],
-            "\nItem 4 = ", Result[["Items"]][["Item 4"]],
-            "\nItem 5 = ", Result[["Items"]][["Item 5"]],
-            "\nItem 6 = ", Result[["Items"]][["Item 6"]],
-            "\nItem 7 = ", Result[["Items"]][["Item 7"]],
-            "\nItem 8 = ", Result[["Items"]][["Item 8"]],
-            "\nItem 9 = ", Result[["Items"]][["Item 9"]],
-            "\nItem 10 = ", Result[["Items"]][["Item 10"]],
-            "\nItem 11 = ", Result[["Items"]][["Item 11"]],
-            "\nItem 12 = ", Result[["Items"]][["Item 12"]]), collapse = "")
-    
-  })
-  
-  #Display plot
-  output$Vrag_percentile <- renderPlot({
-    
-    Result_plot()
-    
-  })
-  
-  #Download plot
-  output$plotdownload <- downloadHandler(
-    
-    filename = function() {paste("Vrag-", Sys.Date(), ".", input$plotformat, sep="")},
-    content = function(file) {
-      
-      Result <- Result_list_single()
-      
-      Plot <- Result_plot() +
-        theme(text = element_text(size = input$plotfont))
-      
-      Plot <- delete_layers(Plot, "GeomText")
-      
-      Plot <- Plot +
-        annotate(geom = "text", x = 2.0, y = 0.3, label = paste(c('VRAG-R score = ', Result[['Score']], 
-                                                                  '\nRisk category = ', Result[['Risk Category']],
-                                                                  '\nPercentile = ', Result[['Percentile']],
-                                                                  '\nMissing items = ', Result[['Number of missing items']]),
-                                                                collapse = ''),
-                 size = input$plotfont/3)
-      
-      ggsave(filename = file,
-             plot = Plot,
-             height = input$plotheight,
-             width = input$plotwidth,
-             dpi = input$plotdpi)
-      
-    }
-  )
-  
-  #Compute VRAG on dataset
-  Dist_risk <- eventReactive(input$calc, {
-    
-    req(input$vrag_input)
-    
-    Var_idx <- c(input$nameitem1,
-                 input$nameitem2,
-                 input$nameitem3_1, input$nameitem3_2, input$nameitem3_3, input$nameitem3_4, input$nameitem3_5, input$nameitem3_6,
-                 input$nameitem4,
-                 input$nameitem5_1,input$nameitem5_2,input$nameitem5_3,input$nameitem5_4,input$nameitem5_5, input$nameitem5_6, input$nameitem5_7, input$nameitem5_8, input$nameitem5_9, input$nameitem5_10,
-                 input$nameitem5_11, input$nameitem5_12, input$nameitem5_13, input$nameitem5_14, input$nameitem5_15, input$nameitem5_16, input$nameitem5_17, input$nameitem5_18, input$nameitem5_19, input$nameitem5_20,
-                 input$nameitem5_21, input$nameitem5_22, input$nameitem5_23, input$nameitem5_24, input$nameitem5_25, input$nameitem5_26, input$nameitem5_27,
-                 input$nameitem6,
-                 input$nameitem7,
-                 input$nameitem8_1, input$nameitem8_2, input$nameitem8_3, input$nameitem8_4, input$nameitem8_5, input$nameitem8_6, input$nameitem8_7, input$nameitem8_8, input$nameitem8_9, input$nameitem8_10,
-                 input$nameitem8_11, input$nameitem8_12, input$nameitem8_13, input$nameitem8_14, input$nameitem8_15, input$nameitem8_16, input$nameitem8_17, input$nameitem8_18,
-                 input$nameitem9,
-                 input$nameitem10_1, input$nameitem10_2, input$nameitem10_3, input$nameitem10_4, input$nameitem10_5, input$nameitem10_6, input$nameitem10_7, input$nameitem10_8, input$nameitem10_9, input$nameitem10_10,
-                 input$nameitem10_11, input$nameitem10_12,
-                 input$nameitem11,
-                 input$nameitem12_1, input$nameitem12_2, input$nameitem12_3, input$nameitem12_4,input$nameitem12_5)
-    
-    #xlsx
-    if(input$data_format == "xlsx (Excel)") {
-      
-      vragData_raw <- read_excel(input$vrag_input$datapath) %>% 
-        dplyr::select(all_of(Var_idx)) %>% 
-        as.data.frame()
-      
-      names(vragData_raw) <- c("Item_1",
-                               "Item_2",
-                               "Item_3_1", "Item_3_2", "Item_3_3", "Item_3_4", "Item_3_5", "Item_3_6",
-                               "Item_4",
-                               "Item_5_1", "Item_5_2", "Item_5_3", "Item_5_4", "Item_5_5", "Item_5_6", "Item_5_7", "Item_5_8", "Item_5_9", "Item_5_10",
-                               "Item_5_11", "Item_5_12", "Item_5_13", "Item_5_14", "Item_5_15", "Item_5_16", "Item_5_17", "Item_5_18", "Item_5_19", "Item_5_20",
-                               "Item_5_21", "Item_5_22", "Item_5_23", "Item_5_24", "Item_5_25", "Item_5_26", "Item_5_27",
-                               "Item_6",
-                               "Item_7",
-                               "Item_8_1", "Item_8_2", "Item_8_3", "Item_8_4", "Item_8_5", "Item_8_6", "Item_8_7", "Item_8_8", "Item_8_9", "Item_8_10",
-                               "Item_8_11", "Item_8_12", "Item_8_13", "Item_8_14", "Item_8_15", "Item_8_16", "Item_8_17", "Item_8_18",
-                               "Item_9",
-                               "Item_10_1", "Item_10_2", "Item_10_3", "Item_10_4", "Item_10_5", "Item_10_6", "Item_10_7", "Item_10_8", "Item_10_9", "Item_10_10",
-                               "Item_10_11", "Item_10_12",
-                               "Item_11",
-                               "Item_12_1", "Item_12_2", "Item_12_3", "Item_12_4", "Item_12_5")
-      
-    }
-    
-    #csv
-    if(input$data_format == "csv") {
-      
-      vragData_raw <- read_csv(input$vrag_input$datapath) %>% 
-        dplyr::select(all_of(Var_idx)) %>% 
-        as.data.frame()
-      
-      names(vragData_raw) <- c("Item_1",
-                               "Item_2",
-                               "Item_3_1", "Item_3_2", "Item_3_3", "Item_3_4", "Item_3_5", "Item_3_6",
-                               "Item_4",
-                               "Item_5_1", "Item_5_2", "Item_5_3", "Item_5_4", "Item_5_5", "Item_5_6", "Item_5_7", "Item_5_8", "Item_5_9", "Item_5_10",
-                               "Item_5_11", "Item_5_12", "Item_5_13", "Item_5_14", "Item_5_15", "Item_5_16", "Item_5_17", "Item_5_18", "Item_5_19", "Item_5_20",
-                               "Item_5_21", "Item_5_22", "Item_5_23", "Item_5_24", "Item_5_25", "Item_5_26", "Item_5_27",
-                               "Item_6",
-                               "Item_7",
-                               "Item_8_1", "Item_8_2", "Item_8_3", "Item_8_4", "Item_8_5", "Item_8_6", "Item_8_7", "Item_8_8", "Item_8_9", "Item_8_10",
-                               "Item_8_11", "Item_8_12", "Item_8_13", "Item_8_14", "Item_8_15", "Item_8_16", "Item_8_17", "Item_8_18",
-                               "Item_9",
-                               "Item_10_1", "Item_10_2", "Item_10_3", "Item_10_4", "Item_10_5", "Item_10_6", "Item_10_7", "Item_10_8", "Item_10_9", "Item_10_10",
-                               "Item_10_11", "Item_10_12",
-                               "Item_11",
-                               "Item_12_1", "Item_12_2", "Item_12_3", "Item_12_4", "Item_12_5")
-      
-    }
-    
-    #csv2
-    if(input$data_format == "csv (European)") {
-      
-      vragData_raw <- read_csv2(input$vrag_input$datapath) %>% 
-        dplyr::select(all_of(Var_idx)) %>% 
-        as.data.frame()
-      
-      names(vragData_raw) <- c("Item_1",
-                               "Item_2",
-                               "Item_3_1", "Item_3_2", "Item_3_3", "Item_3_4", "Item_3_5", "Item_3_6",
-                               "Item_4",
-                               "Item_5_1", "Item_5_2", "Item_5_3", "Item_5_4", "Item_5_5", "Item_5_6", "Item_5_7", "Item_5_8", "Item_5_9", "Item_5_10",
-                               "Item_5_11", "Item_5_12", "Item_5_13", "Item_5_14", "Item_5_15", "Item_5_16", "Item_5_17", "Item_5_18", "Item_5_19", "Item_5_20",
-                               "Item_5_21", "Item_5_22", "Item_5_23", "Item_5_24", "Item_5_25", "Item_5_26", "Item_5_27",
-                               "Item_6",
-                               "Item_7",
-                               "Item_8_1", "Item_8_2", "Item_8_3", "Item_8_4", "Item_8_5", "Item_8_6", "Item_8_7", "Item_8_8", "Item_8_9", "Item_8_10",
-                               "Item_8_11", "Item_8_12", "Item_8_13", "Item_8_14", "Item_8_15", "Item_8_16", "Item_8_17", "Item_8_18",
-                               "Item_9",
-                               "Item_10_1", "Item_10_2", "Item_10_3", "Item_10_4", "Item_10_5", "Item_10_6", "Item_10_7", "Item_10_8", "Item_10_9", "Item_10_10",
-                               "Item_10_11", "Item_10_12",
-                               "Item_11",
-                               "Item_12_1", "Item_12_2", "Item_12_3", "Item_12_4", "Item_12_5")
-      
-    }
-    
-    #txt
-    if(input$data_format == "txt") {
-      
-      vragData_raw <- read_delim(input$vrag_input$datapath) %>% 
-        dplyr::select(all_of(Var_idx)) %>% 
-        as.data.frame()
-      
-      names(vragData_raw) <- c("Item_1",
-                               "Item_2",
-                               "Item_3_1", "Item_3_2", "Item_3_3", "Item_3_4", "Item_3_5", "Item_3_6",
-                               "Item_4",
-                               "Item_5_1", "Item_5_2", "Item_5_3", "Item_5_4", "Item_5_5", "Item_5_6", "Item_5_7", "Item_5_8", "Item_5_9", "Item_5_10",
-                               "Item_5_11", "Item_5_12", "Item_5_13", "Item_5_14", "Item_5_15", "Item_5_16", "Item_5_17", "Item_5_18", "Item_5_19", "Item_5_20",
-                               "Item_5_21", "Item_5_22", "Item_5_23", "Item_5_24", "Item_5_25", "Item_5_26", "Item_5_27",
-                               "Item_6",
-                               "Item_7",
-                               "Item_8_1", "Item_8_2", "Item_8_3", "Item_8_4", "Item_8_5", "Item_8_6", "Item_8_7", "Item_8_8", "Item_8_9", "Item_8_10",
-                               "Item_8_11", "Item_8_12", "Item_8_13", "Item_8_14", "Item_8_15", "Item_8_16", "Item_8_17", "Item_8_18",
-                               "Item_9",
-                               "Item_10_1", "Item_10_2", "Item_10_3", "Item_10_4", "Item_10_5", "Item_10_6", "Item_10_7", "Item_10_8", "Item_10_9", "Item_10_10",
-                               "Item_10_11", "Item_10_12",
-                               "Item_11",
-                               "Item_12_1", "Item_12_2", "Item_12_3", "Item_12_4", "Item_12_5")
-      
-    }
-    
-    #sav  
-    if(input$data_format == "sav (SPSS)") {
-      
-      vragData_raw <- read_sav(input$vrag_input$datapath) %>% 
-        dplyr::select(all_of(Var_idx)) %>% 
-        as.data.frame()
-      
-      names(vragData_raw) <- c("Item_1",
-                               "Item_2",
-                               "Item_3_1", "Item_3_2", "Item_3_3", "Item_3_4", "Item_3_5", "Item_3_6",
-                               "Item_4",
-                               "Item_5_1", "Item_5_2", "Item_5_3", "Item_5_4", "Item_5_5", "Item_5_6", "Item_5_7", "Item_5_8", "Item_5_9", "Item_5_10",
-                               "Item_5_11", "Item_5_12", "Item_5_13", "Item_5_14", "Item_5_15", "Item_5_16", "Item_5_17", "Item_5_18", "Item_5_19", "Item_5_20",
-                               "Item_5_21", "Item_5_22", "Item_5_23", "Item_5_24", "Item_5_25", "Item_5_26", "Item_5_27",
-                               "Item_6",
-                               "Item_7",
-                               "Item_8_1", "Item_8_2", "Item_8_3", "Item_8_4", "Item_8_5", "Item_8_6", "Item_8_7", "Item_8_8", "Item_8_9", "Item_8_10",
-                               "Item_8_11", "Item_8_12", "Item_8_13", "Item_8_14", "Item_8_15", "Item_8_16", "Item_8_17", "Item_8_18",
-                               "Item_9",
-                               "Item_10_1", "Item_10_2", "Item_10_3", "Item_10_4", "Item_10_5", "Item_10_6", "Item_10_7", "Item_10_8", "Item_10_9", "Item_10_10",
-                               "Item_10_11", "Item_10_12",
-                               "Item_11",
-                               "Item_12_1", "Item_12_2", "Item_12_3", "Item_12_4", "Item_12_5")
-      
-    }
-    
-    #Compute scores
-    vragData_out <- compute_vrag_data(Data = vragData_raw, 
-                                      Outcome = c("Score", "Risk Category", "Number of missing items"),
-                                      Shiny_Progress = TRUE)
-    
-    vragData_out
-    
-    
-  })
-  
-  #Display distribution of computed scores
-  output$Distplot <- renderPlot({
-    
-    Data_Plot <- Dist_risk()
-    
-    ggplot(data = Data_Plot, aes_string(x = "Score")) +
-      geom_histogram(aes(y = ..density..), fill = "lightgrey", color = "black") +
-      geom_density(color = "red") +
-      annotate("text", x = Inf, y = Inf, hjust = 1, vjust = 1, size = 7, 
-               label = paste0("N = ", nrow(Data_Plot), "\n",
-                              "NA = ", sum(is.na(Data_Plot[, "Score"])), " (", round((sum(is.na(Data_Plot[, "Score"]))/nrow(Data_Plot)) * 100, digits = 1), "%)", "\n",
-                              "M = ", round(mean(Data_Plot[, "Score"], na.rm = TRUE), digits = 2), "\n",
-                              "Med = ", round(median(Data_Plot[, "Score"], na.rm = TRUE), digits = 2), "\n",
-                              "SD = ", round(sd(Data_Plot[, "Score"], na.rm = TRUE), digits = 2))) +
-      xlab("Score") +
-      theme_classic(base_size = 18)
-    
-  })
-  
-  #Download dataset
-  output$downloadData <- downloadHandler(
-    filename = "VRAG_Output.csv",
-    content = function(file) {
-      
-      req(input$vrag_input)
-      
-      Data_Download <- Dist_risk()
-      
-      write.csv2(Data_Download, file, row.names = FALSE)
-      
-    })
-  
-  
-}
-
-#########################
-###Run the application###
-#########################
-
-shinyApp(ui = ui, server = server)
+shinyApp(ui=localize_ui(ui),server=server)
