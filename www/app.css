@@ -22,6 +22,14 @@ h3 { font-size: 1.08rem; font-weight: 650; }
 .field-code { color: var(--vragr-muted); font-weight: 500; margin-inline-end: .4em; }
 .accordion-item { background: #fff; }
 .accordion-button { overflow-wrap: anywhere; }
+.case-item-header { display: flex; flex: 1; min-width: 0; flex-direction: column; align-items: flex-start; gap: .45rem; }
+.case-item-name { display: block; }
+.case-item-header > .shiny-html-output { max-width: 100%; }
+.case-item-status { display: inline-block; max-width: 100%; padding: .2rem .5rem; border: 1px solid #d5d9dd; border-radius: .4rem; font-size: .73rem; font-weight: 600; line-height: 1.4; white-space: normal; overflow-wrap: anywhere; }
+.case-item-status-complete { color: #23527c; background: #edf4fb; border-color: #bed2e4; }
+.case-item-status-partial, .case-item-status-missing { color: #725018; background: #fff5df; border-color: #e4c98e; }
+.case-item-status-invalid { color: #9c2933; background: #fbeef0; border-color: #dfb4b9; }
+#single_items .accordion-button::after { margin-inline-start: 1rem; flex-shrink: 0; }
 .card-header { background: #fff; padding: 20px 24px; border-bottom: 1px solid #eeeeee; border-radius: 14px 14px 0 0 !important; }
 .card-body { padding: 24px; gap: 12px; }
 .shiny-input-container:not(.shiny-input-container-inline) { width: 100%; max-width: 100%; }

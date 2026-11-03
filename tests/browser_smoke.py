@@ -15,6 +15,116 @@ ARTIFACTS = Path(os.environ.get("VRAGR_ARTIFACTS", ROOT / "tests/artifacts"))
 URL = os.environ.get("VRAGR_TEST_URL", "http://127.0.0.1:3838")
 
 
+def check_item_indicators(browser, errors):
+    page = browser.new_page(viewport={"width": 1440, "height": 1000})
+    page.on("pageerror", lambda error: errors.append(str(error)))
+    page.goto(URL, wait_until="networkidle")
+
+    def choose(id_, value):
+        page.wait_for_function("id => {const x=document.getElementById(id);return x && (x.selectize || x.options)}", arg=id_)
+        page.evaluate("""([id,value]) => {const x=document.getElementById(id);
+          if(x.selectize) x.selectize.setValue(value); else {x.value=value;x.dispatchEvent(new Event('change',{bubbles:true}));}}""", [id_, value])
+
+    def header(item):
+        return page.locator("#single_items .accordion-button").filter(has_text=f"Item {item} ·")
+
+    def badge(item, state, text=None):
+        indicator = page.locator(f"#single_item_status_{item} .case-item-status")
+        expect(indicator).to_be_visible()
+        expect(indicator).to_have_attribute("data-state", state)
+        if text:
+            expect(indicator).to_contain_text(text)
+
+    def collapse_all():
+        expect(page.locator("#single_items .collapsing")).to_have_count(0)
+        for button in page.locator("#single_items .accordion-button").all():
+            if button.get_attribute("aria-expanded") == "true":
+                button.click()
+        expect(page.locator("#single_items .collapsing")).to_have_count(0)
+        expect(page.locator('#single_items .accordion-button[aria-expanded="true"]')).to_have_count(0)
+        expect(page.locator("#single_items .accordion-collapse.show")).to_have_count(0)
+
+    collapse_all()
+    for item in range(1, 13):
+        badge(item, "missing")
+    badge(3, "missing", "6 of 6 missing")
+    badge(5, "missing", "27 of 27 missing")
+    badge(12, "missing", "5 of 5 missing")
+    page.evaluate("window.caseHeaders = Array.from(document.querySelectorAll('#single_items .accordion-button'))")
+
+    header(3).click()
+    choose("single_Item_3_1", "No")
+    collapse_all()
+    badge(3, "partial", "5 of 6 missing · Scoreable")
+    header(12).click()
+    for field in range(1, 5):
+        choose(f"single_Item_12_{field}", "0")
+    collapse_all()
+    badge(12, "partial", "1 of 5 missing · Scoreable")
+    choose("single_Item_12_4", "__missing__")
+    badge(12, "missing", "2 of 5 missing · Item missing")
+    choose("single_Item_12_4", "0")
+    badge(12, "partial", "1 of 5 missing · Scoreable")
+
+    # Keep an English desktop/mobile record with every item closed.
+    for width in (390, 1440):
+        page.set_viewport_size({"width": width, "height": 1000})
+        page.screenshot(path=str(ARTIFACTS / f"item-status-collapsed-en-{width}.png"), full_page=True)
+
+    header(5).click()
+    choose("single_info_5", "known")
+    badge(5, "complete", "Complete")
+    page.locator("#single_Item_5_1").fill("-1")
+    collapse_all()
+    badge(5, "invalid", "Check inputs")
+    badge(3, "partial", "Scoreable")
+    choose("single_info_5", "missing")
+    badge(5, "missing", "27 of 27 missing")
+    choose("single_info_5", "known")
+    badge(5, "invalid")
+    header(5).click()
+    page.locator("#single_Item_5_1").fill("")
+    collapse_all()
+    badge(5, "invalid", "1 of 27 missing")
+    header(5).click()
+    page.locator("#single_Item_5_1").fill("0")
+    collapse_all()
+    badge(5, "complete")
+
+    page.locator("#language").select_option("de")
+    badge(3, "partial", "5 von 6 fehlen · Auswertbar")
+    badge(12, "partial", "1 von 5 fehlen · Auswertbar")
+    expect(page.locator('#single_items .accordion-button[aria-expanded="true"]')).to_have_count(0)
+    assert page.evaluate("window.caseHeaders.every((x,i)=>x === document.querySelectorAll('#single_items .accordion-button')[i])")
+    for width in (390, 768, 1280, 1440):
+        page.set_viewport_size({"width": width, "height": 1000})
+        assert page.evaluate("document.documentElement.scrollWidth <= innerWidth + 1")
+        clipped = page.locator(".case-item-status").evaluate_all("""nodes => nodes.filter(x => {
+          const r=x.getBoundingClientRect(),p=x.closest('.case-item-header').getBoundingClientRect();
+          return x.scrollWidth>x.clientWidth+1 || r.right>p.right+1;
+        }).map(x=>x.textContent)""")
+        assert not clipped, clipped
+        if width in (390, 1440):
+            page.screenshot(path=str(ARTIFACTS / f"item-status-collapsed-de-{width}.png"), full_page=True)
+
+    page.locator("#single_example").click()
+    page.wait_for_function("document.getElementById('single_Item_7').value === '28'")
+    badge(7, "complete")
+    badge(9, "missing")
+    badge(10, "missing", "12 von 12 fehlen")
+    page.locator("#single_calculate").click()
+    expect(page.locator("#score_value")).to_have_text("14")
+    page.locator("#language").select_option("en")
+    badge(10, "missing", "12 of 12 missing")
+    expect(page.locator("#score_value")).to_have_text("14")
+    page.locator("#single_reset").click()
+    for item in range(1, 13):
+        badge(item, "missing")
+    expect(page.locator("#score_value")).to_have_count(0)
+    expect(page.locator('#single_items .accordion-button[aria-expanded="true"]')).to_have_count(0)
+    page.close()
+
+
 def run():
     ARTIFACTS.mkdir(parents=True, exist_ok=True)
     errors = []
@@ -25,6 +135,7 @@ def run():
         page = browser.new_page(viewport={"width": 1440, "height": 1000}, accept_downloads=True)
         page.on("pageerror", lambda error: errors.append(str(error)))
         page.goto(URL, wait_until="networkidle")
+        check_item_indicators(browser, errors)
 
         def choose(id_, value):
             page.wait_for_function("id => {const x=document.getElementById(id);return x && (x.selectize || x.options)}", arg=id_)

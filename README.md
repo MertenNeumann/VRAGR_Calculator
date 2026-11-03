@@ -62,6 +62,13 @@ back to No information excludes its stored values; returning to Information
 available preserves values already entered. **Reset inputs** returns all items
 to missing, restores the offence counts to zero and clears the saved result.
 
+Each item header shows whether its inputs are complete, partially missing or
+need checking, even when the panel is collapsed. Multi-field items show the
+number of missing inputs. The badge distinguishes partial information that can
+still produce an item score from an item that remains missing, following the
+instrument's coding rules. Badges update as inputs, examples, reset actions and
+the display language change.
+
 Click **Calculate result** after entering enough information to score at least
 eight of the twelve items. The result shows the total, category, percentile,
 five-/twelve-year reference rates, missing-item count and individual item scores.

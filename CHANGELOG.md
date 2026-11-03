@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Show live item-completion badges, missing-input counts and scoreability in
+  collapsed single-case item headers, with English/German and invalid-input states.
+- Flag cleared numeric fields as incomplete when an item is marked as known,
+  consistently with the existing numeric-input validation.
 - Shorten the requested interpretation text in both interface languages.
 - Simplify the related OGRS 3 calculator description in both languages.
 - Rename the standalone scoring script to `VRAGR_Calculator.R` and update app,

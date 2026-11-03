@@ -6,6 +6,7 @@ source("VRAGR_Calculator.R", local=TRUE)
 source("R/workflow.R", local=TRUE)
 source("R/i18n.R", local=TRUE)
 source("R/plots.R", local=TRUE)
+source("R/item-status.R", local=TRUE)
 .app_root <- normalizePath(".",mustWork=TRUE)
 options(shiny.maxRequestSize=10*1024^2,shiny.sanitize.errors=TRUE)
 manual_link <- function(label="German manual (PDF)",page=NULL) tags$a(label,
@@ -36,7 +37,10 @@ single_group <- function(group) {
       c("No information"="missing","Information available"="known"),selected="missing")
     controls <- conditionalPanel(sprintf("input.single_info_%d === 'known'",i),controls)
   }
-  accordion_panel(paste0("Item ",i," · ",group$en),hint(group$help_en," ",manual_link("Coding guidance",group$page)),
+  title <- span(class="case-item-header",
+    span(class="case-item-name",paste0("Item ",i," · ",group$en)),
+    uiOutput(paste0("single_item_status_",i),inline=TRUE))
+  accordion_panel(title,hint(group$help_en," ",manual_link("Coding guidance",group$page)),
     extra,if(i %in% c(3,10,12)) div(class="form-grid",controls) else controls,value=paste0("item",i))
 }
 ui <- page_navbar(
@@ -52,6 +56,7 @@ ui <- page_navbar(
     layout_columns(col_widths=c(5,7),
       card(class="input-card",card_header(h2("Case details")),
         hint("All items start with No information. Choose the available answers or load an example. Cormier–Lang offence counts start at zero when information is available."),
+        hint("Item headers show missing inputs. An item can be scoreable with some missing information; check the item guidance."),
         accordion(!!!lapply(.vragr_schema,single_group),open="item1",id="single_items"),
         uiOutput("single_validation"),div(class="action-row",actionButton("single_calculate","Calculate result",class="btn-primary"),
           actionButton("single_example","Load example",class="btn-outline-secondary"),actionButton("single_reset","Reset inputs",class="btn-outline-secondary")),
@@ -153,12 +158,24 @@ server <- function(input,output,session) {
       }
       if((field %in% vragr_categories || item==12) && is.null(value)) value <- "__missing__"
       if(identical(value,"__missing__")) return(NA)
-      if(is.null(value) || identical(value,"") || (is.numeric(value) && is.na(value))) {
+      if(is.null(value) || identical(value,"") || (length(value)==1L && is.na(value))) {
         incomplete <<- c(incomplete,field); return(NA)
       }
       value
     }),vragr_fields)
     list(data=as.data.frame(values,stringsAsFactors=FALSE),incomplete=unique(incomplete))
+  })
+  single_status <- reactive(vragr_item_status(single_state()$data,single_state()$incomplete))
+  for (item in seq_len(12L)) local({
+    i <- item
+    id <- paste0("single_item_status_",i)
+    output[[id]] <- renderUI({
+      status <- single_status()[i,,drop=FALSE]
+      span(class=paste("case-item-status",paste0("case-item-status-",status$state)),
+        `data-state`=status$state,`aria-live`="polite",`aria-atomic`="true",
+        vragr_item_status_label(status,language()))
+    })
+    outputOptions(output,id,suspendWhenHidden=FALSE)
   })
   single_saved <- reactiveVal(NULL); example_loaded <- reactiveVal(FALSE)
   set_case <- function(data=NULL) {
