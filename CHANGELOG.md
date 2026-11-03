@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Rename the standalone scoring script to `VRAGR_Calculator.R` and update app,
+  test and documentation references. Add the MIT copyright/license notice.
+- Strengthen simulation argument validation and add optional missingness and
+  environment selection to `sim_vrag_case()`, retaining legacy defaults.
 - Fix named column mappings so field names determine assignment even when a
   mapping vector is reordered; reject incomplete or duplicate field names.
 - Keep page titles as plain text during UI localisation.

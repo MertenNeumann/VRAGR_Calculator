@@ -62,7 +62,7 @@ behavior, not clinical validity; see [Validation](docs/VALIDATION.md).
 
 ## Code and translations
 
-`VRAGR.R` contains the base-R scoring and validation core.
+`VRAGR_Calculator.R` contains the base-R scoring and validation core.
 `R/workflow.R` handles imports, mappings and exports; `R/plots.R` handles plot
 rendering; `app.R` manages the Shiny interface and session state.
 

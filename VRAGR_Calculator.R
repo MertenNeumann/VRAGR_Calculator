@@ -1,7 +1,8 @@
 # VRAG-R scoring independent of Shiny and external packages.
+# Copyright (c) 2026 Merten Neumann. MIT license; see LICENSE.
 # Rettenberger, Gregorio Hertz & Eher (2017), printed pp. 11-12, 20-42, 45-46.
 # Source decisions and limitations: docs/MODEL_AND_SOURCES.md.
-VRAGR_APP_VERSION <- "2.1.1"
+VRAGR_APP_VERSION <- "2.1.2"
 VRAGR_MODEL_VERSION <- "VRAG-R / German manual 2017"
 VRAGR_MANUAL_URL <- "https://krimpub.krimz.de/frontdoor/deliver/index/docId/40/file/bm-online8.pdf"
 vragr_fields <- c("Item_1", "Item_2", paste0("Item_3_", 1:6), "Item_4", paste0("Item_5_", 1:27),
@@ -136,24 +137,39 @@ compute_vrag_data <- function(Data, Outcome = "Score", Shiny_Progress = FALSE) {
   Data
 }
 
-# Synthetic-data helpers retained for compatibility. Their generated values do
-# not represent a calibrated population and are not scoring reference cases.
+# Synthetic-data helpers for examples and software tests. Their distributions
+# do not represent a calibrated population and are not scoring reference cases.
+.vragr_simulation_scalar <- function(value) {
+  (is.integer(value) || is.double(value)) && !is.object(value) &&
+    is.null(dim(value)) && length(value) == 1L && is.finite(value)
+}
+
+# set.seed() can be used by the caller; helpers do not set or restore RNG seeds.
 sim_vrag_data <- function(N, prob_missing = 0.1) {
-  if(length(N)!=1L || !is.finite(N) || N<0 || N!=floor(N)) stop("N must be a non-negative whole number.",call.=FALSE)
-  if(length(prob_missing)!=1L || !is.finite(prob_missing) || prob_missing<0 || prob_missing>1) stop("prob_missing must be between 0 and 1.",call.=FALSE)
-  data <- setNames(lapply(vragr_fields,function(field) {
-    if(field %in% vragr_categories) sample(vragr_choices(field),N,replace=TRUE)
-    else if(field=="Item_7") sample(14:90,N,replace=TRUE)
-    else if(grepl("^Item_12_",field)) sample(0:2,N,replace=TRUE)
-    else stats::rnbinom(N,size=5,mu=.3)
-  }),vragr_fields)
-  data <- as.data.frame(data,stringsAsFactors=FALSE)
-  for(field in vragr_fields) data[[field]][stats::runif(N)<prob_missing] <- NA
+  if (!.vragr_simulation_scalar(N) || N < 0 || N != floor(N) ||
+      N > .Machine$integer.max) {
+    stop("N must be a non-negative whole number no greater than .Machine$integer.max.", call. = FALSE)
+  }
+  if (!.vragr_simulation_scalar(prob_missing) || prob_missing < 0 || prob_missing > 1) {
+    stop("prob_missing must be between 0 and 1.", call. = FALSE)
+  }
+  data <- setNames(lapply(vragr_fields, function(field) {
+    if (field %in% vragr_categories) sample(vragr_choices(field), N, replace = TRUE)
+    else if (field == "Item_7") sample(14:90, N, replace = TRUE)
+    else if (grepl("^Item_12_", field)) sample(0:2, N, replace = TRUE)
+    else stats::rnbinom(N, size = 5, mu = .3)
+  }), vragr_fields)
+  data <- as.data.frame(data, stringsAsFactors = FALSE)
+  for (field in vragr_fields) data[[field]][stats::runif(N) < prob_missing] <- NA
   data
 }
-sim_vrag_case <- function() {
-  data <- sim_vrag_data(1L,prob_missing=0)
-  # Preserve the original helper's global item bindings for existing scripts.
-  list2env(as.list(data),envir=.GlobalEnv)
+
+sim_vrag_case <- function(prob_missing = 0, envir = .GlobalEnv) {
+  if (!is.null(envir) && !is.environment(envir)) {
+    stop("envir must be NULL or an environment.", call. = FALSE)
+  }
+  data <- sim_vrag_data(1L, prob_missing = prob_missing)
+  # Keep legacy global item assignment; pass envir = NULL to avoid assignment.
+  if (!is.null(envir)) list2env(as.list(data), envir = envir)
   invisible(data)
 }

@@ -124,7 +124,7 @@ The separate Hare manual is still required for full PCL-R item assessment.
 ## R API
 
 ```r
-source("VRAGR.R")
+source("VRAGR_Calculator.R")
 data <- read.csv("examples/example-data.csv", check.names = FALSE,
                  colClasses = "character", na.strings = "")
 result <- vragr(data)
@@ -138,6 +138,29 @@ and Item 11 uses `None`/`Only14`/`Other`/`Female14`. Counts must be non-negative
 integers, age is in positive completed years, and PCL-R inputs are 0, 1 or 2.
 The legacy `compute_vrag(...)` and `compute_vrag_data(...)` functions keep their
 percentage-valued probabilities; `vragr()` returns probabilities between 0 and 1.
+
+## Simulated data
+
+```r
+source("VRAGR_Calculator.R")
+set.seed(123)
+data <- sim_vrag_data(100, prob_missing = 0)
+scores <- vragr(data)
+case <- sim_vrag_case(envir = NULL)
+```
+
+`sim_vrag_data(N, prob_missing = 0.1)` returns
+`N` rows in the scoring input schema. `sim_vrag_case(prob_missing = 0, envir = .GlobalEnv)`
+returns one row invisibly. It retains the original helper's global item assignments
+by default; pass `envir = NULL` to avoid assignment or supply another environment.
+
+The dataset helper accepts nonnegative whole-number row counts, including zero.
+Both helpers accept missingness probabilities between 0 and 1, applied independently
+to each input field. Use `prob_missing = 0` for fully scoreable cases; otherwise
+use the non-strict scoring mode to retain rows with insufficient information.
+The functions use R's current random-number generator; call `set.seed()` externally
+for reproducibility. Their illustrative distributions are not calibrated to a
+real population and must not be used as independent scoring references.
 
 ## Development and testing
 

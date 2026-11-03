@@ -1,5 +1,5 @@
 # Run from the repository root: Rscript tests/run.R
-if (!file.exists("VRAGR.R")) stop("Run from the repository root.")
+if (!file.exists("VRAGR_Calculator.R")) stop("Run from the repository root.")
 required <- c("testthat", "shiny", "bslib", "ggplot2", "haven", "readxl", "readr", "digest")
 if (!all(vapply(required, requireNamespace, logical(1), quietly = TRUE))) {
   stop("Test dependencies are missing. Run scripts/setup.R first.")

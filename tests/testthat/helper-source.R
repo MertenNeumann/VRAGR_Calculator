@@ -1,5 +1,5 @@
 root <- normalizePath(file.path("..", ".."))
-source(file.path(root, "VRAGR.R"))
+source(file.path(root, "VRAGR_Calculator.R"))
 source(file.path(root, "R/workflow.R"))
 minimum_case <- function() {
   x <- setNames(as.list(rep(0, 75)), vragr_fields)

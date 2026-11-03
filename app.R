@@ -2,7 +2,7 @@
 library(shiny)
 library(bslib)
 library(ggplot2)
-source("VRAGR.R", local=TRUE)
+source("VRAGR_Calculator.R", local=TRUE)
 source("R/workflow.R", local=TRUE)
 source("R/i18n.R", local=TRUE)
 source("R/plots.R", local=TRUE)
