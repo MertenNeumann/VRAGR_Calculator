@@ -85,7 +85,7 @@ The **score** ranges from −34 to +46; the **risk category** ranges from 1 to 9
 A **percentile** describes the proportion of the reference sample with an equal
 or lower score. It is distinct from the published probability of violent recidivism.
 The five- and twelve-year rates are cumulative from the start of the relevant
-opportunity period, not annual rates or consecutive follow-up periods.
+opportunity period.
 
 The default plot shows the **empirical percentile curve**. An optional
 **normal-distribution view** illustrates the same percentile rank using a shaded

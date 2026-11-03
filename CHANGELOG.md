@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Shorten the requested interpretation text in both interface languages.
+- Simplify the related OGRS 3 calculator description in both languages.
 - Rename the standalone scoring script to `VRAGR_Calculator.R` and update app,
   test and documentation references. Add the MIT copyright/license notice.
 - Strengthen simulation argument validation and add optional missingness and
