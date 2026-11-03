@@ -19,31 +19,24 @@ administration, item coding and interpretation.
 
 ## Installation and startup
 
-Use **R 4.6.2** and the package versions recorded in `renv.lock`. Run these commands
-from the repository root:
+Use **R 4.6.2** and the package versions recorded in `renv.lock`.
+`.R-version` records the supported R version. From the repository root, run:
 
 ```sh
 Rscript --vanilla scripts/setup.R
 Rscript scripts/run.R
 ```
 
-The default local server port is 3838; set `VRAGR_PORT` to use another port.
-The setup script preserves the configured proxy and CA trust. No deployment
-credentials or external database are needed for local calculations.
+The setup script restores the project library, including test dependencies.
+`.Rprofile` activates that library when R starts in the repository root.
+Installation requires access to CRAN. Linux source installations also require
+compilers and development libraries; see [Contributing](CONTRIBUTING.md).
+No external database or API credentials are required for local calculations.
 
-For Linux source installations, development packages may be required, including
-`build-essential`, `gfortran`, `cmake`, `pkg-config`, `zlib1g-dev`, `libuv1-dev`
-and `libx11-dev` on Debian/Ubuntu. The prepared cloud environment provides R
-through `/workspace/.vragr-cloud/run.sh`, for example
-`/workspace/.vragr-cloud/run.sh Rscript scripts/run.R`.
-
-The lockfile includes the test dependencies. Keep `snapshot.dev` enabled in
-`renv/settings.json` when running `renv::snapshot()`, so a clean CI restore also
-installs `testthat` and its dependencies.
-
-R and package releases were checked against the official R, CRAN and PyPI
-indexes on **31 October 2026**. The lockfile records the current stable R
-dependencies; browser checks use Playwright **1.64.1**.
+The default local address is `127.0.0.1:3838`. Set `VRAGR_PORT` to use another
+port and `VRAGR_HOST` to change the bind address. When running both calculators
+at once, use different ports. See [Data processing and deployment](docs/DATA_AND_DEPLOYMENT.md)
+for hosting requirements.
 
 ## Interface and calculations
 
@@ -51,18 +44,27 @@ The four tabs are **Single case**, **Dataset**, **Methods** and **About the app*
 in German, **Einzelfall**, **Datensatz**, **Methodische Hinweise** and
 **Über die App**. Each tab explains its controls and available actions.
 
+The language setting is local to each Shiny session. It translates headings,
+controls, validation messages, results and plots. It does not translate uploaded
+values, IDs, column names or filenames, or alter their mappings. A new session
+starts in English.
+
+Results and downloads require the current inputs and settings to match a saved
+calculation. Edits hide results while they differ; reverting those edits can
+restore access to the existing calculation. Replacing an upload requires
+recalculation. Language changes do not affect this check.
+
 **Single case.** Every item initially shows **No information**. Enter the known
 answers, leaving genuinely unavailable information marked as missing. For the
 Cormier–Lang lists, selecting **Information available** starts all offence counts
 at **0**. Review the full list and enter the relevant counts. Switching an item
 back to No information excludes its stored values; returning to Information
 available preserves values already entered. **Reset inputs** returns all items
-to missing and restores the offence counts to zero.
+to missing, restores the offence counts to zero and clears the saved result.
 
 Click **Calculate result** after entering enough information to score at least
 eight of the twelve items. The result shows the total, category, percentile,
 five-/twelve-year reference rates, missing-item count and individual item scores.
-Changing scoring inputs hides the result and blocks downloads until recalculation.
 An explicitly loaded example is available for trying the workflow.
 
 **Dataset.** Upload XLSX, comma- or semicolon-separated CSV, tab-separated TXT, or
@@ -75,8 +77,7 @@ The downloadable [example dataset](examples/example-data.csv) illustrates the la
 Blank cells remain missing; unfamiliar category values need an explicit mapping.
 Invalid rows stay in their original order with a status, error explanation and
 empty risk-result fields. A file with no scoreable rows cannot be exported as a
-calculated result. Changes to the file, import settings, mappings or ID selection
-invalidate the saved result. Raw preview values and column names are never translated.
+calculated result. Raw preview values and column names are never translated.
 
 ## Measures, plots and exports
 
@@ -87,14 +88,14 @@ The five- and twelve-year rates are cumulative from the start of the relevant
 opportunity period, not annual rates or consecutive follow-up periods.
 
 The default plot shows the **empirical percentile curve**. An optional
-**normal-distribution view** restores the earlier shaded-bell-curve presentation
-using the same percentile rank. It is an illustration, not a fitted distribution
+**normal-distribution view** illustrates the same percentile rank using a shaded
+standard-normal curve. It is an illustration, not a fitted distribution
 of VRAG-R totals. At percentile 100, the marker is drawn at the finite right edge.
 Plot choice and language do not change calculated values, timestamps or CSV exports.
 The current plot can be downloaded as PNG, JPEG, PDF, SVG or TIFF.
 
-**Both result exports use English headers, UTF-8, comma separators and a decimal
-point**, regardless of interface language. `Prob_5_years` and `Prob_12_years` are
+**Exports always use a stable English schema, UTF-8, comma-separated fields and
+a decimal point**, regardless of the interface language. `Prob_5_years` and `Prob_12_years` are
 unrounded 0–1 numbers; `Percentile` is a 0–100 value. Exports include coded inputs,
 item scores, row/optional case ID, status, app/model version, source filename and
 UTC calculation time. Repeated CSV downloads of one calculation retain their
@@ -124,7 +125,8 @@ The separate Hare manual is still required for full PCL-R item assessment.
 
 ```r
 source("VRAGR.R")
-data <- read.csv("examples/example-data.csv", check.names = FALSE)
+data <- read.csv("examples/example-data.csv", check.names = FALSE,
+                 colClasses = "character", na.strings = "")
 result <- vragr(data)
 result_with_invalid_rows <- vragr(data, strict = FALSE)
 ```
@@ -137,39 +139,36 @@ integers, age is in positive completed years, and PCL-R inputs are 0, 1 or 2.
 The legacy `compute_vrag(...)` and `compute_vrag_data(...)` functions keep their
 percentage-valued probabilities; `vragr()` returns probabilities between 0 and 1.
 
-## Tests
+## Development and testing
+
+Run the R regression suite from the repository root:
 
 ```sh
 Rscript tests/run.R
-python3 -m pip install -r tests/requirements-browser.txt
-python3 -m playwright install chromium
-# Start the app in another process before the browser checks.
-python3 tests/browser_smoke.py
 ```
 
-Set `VRAGR_TEST_URL` for another local port or `CHROMIUM_PATH` for an existing
-browser. Screenshots and downloads go to ignored `tests/artifacts/`.
-The suite covers all 81 possible total scores, every item band and offence
-weight, missing/invalid values, original published examples, imports, default
-answers, state preservation, both plots, export freshness and a 100,000-row batch.
-Browser checks cover both languages, separate sessions, real uploads/downloads,
-long raw labels and mobile/desktop layouts. Test inputs are synthetic or derived
-from published worked examples; no user case records are included.
+The suite covers independent scoring references, validation, imports, exports,
+session state and translations. Browser tests exercise calculations, uploads,
+downloads and responsive layouts in both languages. See
+[Validation](docs/VALIDATION.md) for coverage and limitations, and
+[Contributing](CONTRIBUTING.md) for test setup and development guidance.
 
 ## Data processing, contact and reuse
 
 Calculations and uploads are processed **on the server**. Read
-[Data and deployment](docs/DATA_AND_DEPLOYMENT.md) for temporary-file handling,
-hosting limits and deployment responsibilities. Existing rsconnect metadata is
-not an automatic deployment instruction. OpenAI Codex assisted with code, interface,
-documentation and tests; no AI model is used for case calculations.
+[Data processing and deployment](docs/DATA_AND_DEPLOYMENT.md) for temporary-file
+handling, hosting requirements and deployment-specific privacy information.
 
-Report bugs or suggest additions through
+Report bugs, feature requests and suggestions through
 [GitHub Issues](https://github.com/MertenNeumann/VRAGR_Calculator/issues), using
-synthetic examples rather than personal information or original case data.
-The [OGRS 3 calculator](https://mertenneumann.shinyapps.io/OGRS_Calculator/) is
-available separately for general reoffending.
+synthetic examples rather than personal information or original case records.
+The separate [OGRS 3 calculator](https://mertenneumann.shinyapps.io/OGRS_Calculator/)
+and its [source code](https://github.com/MertenNeumann/OGRS_Calculator) are also available.
 
-This project is licensed under the [MIT License](LICENSE). Adapted OGRS components
-retain their MIT notice in [NOTICE](NOTICE) and [LICENSES/OGRS-MIT.txt](LICENSES/OGRS-MIT.txt).
-Manual and instrument rights remain separate.
+Application code is under the [MIT license](LICENSE), Merten Neumann.
+The license does not grant rights to the cited manuals, instruments or other
+published source material. Adapted OGRS components retain their MIT notice in
+[NOTICE](NOTICE) and [LICENSES/OGRS-MIT.txt](LICENSES/OGRS-MIT.txt).
+
+OpenAI Codex assisted with code, interface, documentation and tests. Case
+calculations use the documented R code; no AI model is used to score cases.

@@ -1,7 +1,7 @@
 # VRAG-R scoring independent of Shiny and external packages.
 # Rettenberger, Gregorio Hertz & Eher (2017), printed pp. 11-12, 20-42, 45-46.
 # Source decisions and limitations: docs/MODEL_AND_SOURCES.md.
-VRAGR_APP_VERSION <- "2.1.0"
+VRAGR_APP_VERSION <- "2.1.1"
 VRAGR_MODEL_VERSION <- "VRAG-R / German manual 2017"
 VRAGR_MANUAL_URL <- "https://krimpub.krimz.de/frontdoor/deliver/index/docId/40/file/bm-online8.pdf"
 vragr_fields <- c("Item_1", "Item_2", paste0("Item_3_", 1:6), "Item_4", paste0("Item_5_", 1:27),
@@ -114,9 +114,7 @@ compute_vrag <- function(Item_1, Item_2, Item_3_1, Item_3_2, Item_3_3, Item_3_4,
     Item_10_7, Item_10_8, Item_10_9, Item_10_10, Item_10_11, Item_10_12, Item_11,
     Item_12_1, Item_12_2, Item_12_3, Item_12_4, Item_12_5) {
   values <- mget(vragr_fields, envir=environment(), inherits=FALSE)
-  if (length(values) != 75L || any(lengths(values) != 1L)) stop("Supply 75 scalar inputs.", call. = FALSE)
-  if (is.null(names(values))) names(values) <- vragr_fields
-  if (!setequal(names(values), vragr_fields)) stop("Use the documented VRAG-R input names.", call. = FALSE)
+  if (any(lengths(values) != 1L)) stop("Supply 75 scalar inputs.", call. = FALSE)
   result <- vragr(as.data.frame(values[vragr_fields], stringsAsFactors = FALSE))
   list(Score=result$Score, "Risk Category"=result$Risk_Category, Percentile=result$Percentile,
     "Probability for violent recidivism after 5 years"=100*result$Prob_5_years,
@@ -125,6 +123,7 @@ compute_vrag <- function(Item_1, Item_2, Item_3_1, Item_3_2, Item_3_3, Item_3_4,
     Items=setNames(as.list(result[1,paste0("Item_",1:12,"_score")]), paste("Item",1:12)))
 }
 compute_vrag_data <- function(Data, Outcome = "Score", Shiny_Progress = FALSE) {
+  # Shiny_Progress is retained for compatibility; scoring has no UI side effects.
   if (!all(vragr_fields %in% names(Data))) {
     if (ncol(Data) != 75L) stop("Provide all 75 VRAG-R input columns.", call. = FALSE)
     names(Data) <- vragr_fields
@@ -137,7 +136,8 @@ compute_vrag_data <- function(Data, Outcome = "Score", Shiny_Progress = FALSE) {
   Data
 }
 
-# Legacy toy-data helpers, not calibrated offender populations or test oracles.
+# Synthetic-data helpers retained for compatibility. Their generated values do
+# not represent a calibrated population and are not scoring reference cases.
 sim_vrag_data <- function(N, prob_missing = 0.1) {
   if(length(N)!=1L || !is.finite(N) || N<0 || N!=floor(N)) stop("N must be a non-negative whole number.",call.=FALSE)
   if(length(prob_missing)!=1L || !is.finite(prob_missing) || prob_missing<0 || prob_missing>1) stop("prob_missing must be between 0 and 1.",call.=FALSE)

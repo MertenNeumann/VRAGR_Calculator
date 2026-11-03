@@ -1,4 +1,3 @@
-source(file.path(root,"R/workflow.R"))
 test_that("all documented imports use explicit readers and retain IDs as text", {
   x <- minimum_case(); x$Case_ID <- "001"
   csv <- tempfile(fileext=".csv");write.csv(x,csv,row.names=FALSE)
@@ -23,6 +22,13 @@ test_that("malformed imports, duplicate/empty headers and empty files fail", {
   writeLines('a,b',file);expect_error(read_vragr_file(file,"csv"),"no data")
   expect_error(read_vragr_file('nonexistent.csv'),"no longer")
 })
+test_that("SAV imports accept the row limit and reject files exceeding it", {
+  file <- tempfile(fileext = ".sav")
+  haven::write_sav(data.frame(value = rep(1, 100000L)), file)
+  expect_equal(nrow(read_vragr_file(file, "sav")), 100000L)
+  haven::write_sav(data.frame(value = rep(1, 100001L)), file)
+  expect_error(read_vragr_file(file, "sav"), "100,000 data rows")
+})
 test_that("category mappings are explicit and keyed by raw values, not their order", {
   x <- minimum_case();columns <- setNames(vragr_fields,vragr_fields)
   maps <- setNames(lapply(vragr_categories,function(f) setNames(vragr_choices(f),vragr_choices(f))),vragr_categories)
@@ -35,6 +41,20 @@ test_that("category mappings are explicit and keyed by raw values, not their ord
   expect_false(identical(mapping_input_id("Item_1","Sex","Male"),mapping_input_id("Item_4","Sex","Male")))
   maps$Item_1 <- c(custom="__missing__");expect_true(is.na(prepare_vragr_data(x,columns,maps)$Item_1))
   columns[2] <- columns[1];expect_error(prepare_vragr_data(x,columns,maps),"distinct")
+})
+test_that("named column mappings use input names rather than vector order", {
+  x <- minimum_case()
+  columns <- setNames(vragr_fields, vragr_fields)
+  maps <- setNames(lapply(vragr_categories, function(field) {
+    setNames(vragr_choices(field), vragr_choices(field))
+  }), vragr_categories)
+  expected <- prepare_vragr_data(x, columns, maps)
+  expect_identical(prepare_vragr_data(x, rev(columns), maps), expected)
+  expect_identical(prepare_vragr_data(x, unname(columns), maps), expected)
+  names(columns)[1] <- "unknown"
+  expect_error(prepare_vragr_data(x, columns, maps), "VRAG-R input names")
+  names(columns)[1] <- names(columns)[2]
+  expect_error(prepare_vragr_data(x, columns, maps), "VRAG-R input names")
 })
 test_that("exports preserve rows, invalid status, IDs, inputs, probabilities and UTC time", {
   x <- rbind(minimum_case(),minimum_case());x$Item_1[2] <- "invalid"

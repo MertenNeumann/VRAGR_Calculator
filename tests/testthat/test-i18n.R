@@ -21,6 +21,10 @@ test_that("authored strings and later column controls are localised without touc
   expect_identical(catalog$value,"")
   raw <- htmltools::span("Single case",`data-i18n-raw`="true")
   expect_match(as.character(env$localize_ui(raw,"de")),"Single case",fixed=TRUE)
+  title <- htmltools::tags$title("VRAG-R · Calculator")
+  expect_identical(env$localize_ui(title)$children, title$children)
+  expect_match(as.character(env$localize_ui(title)),
+    "<title>VRAG-R · Calculator</title>", fixed = TRUE)
   html <- htmltools::renderTags(env$localize_ui(env$ui,"de"))$html
   expect_match(html,"OpenAI Codex",fixed=TRUE)
   expect_false(grepl("Die KI-Unterstützung ersetzt",html,fixed=TRUE))

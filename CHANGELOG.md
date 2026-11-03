@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Fix named column mappings so field names determine assignment even when a
+  mapping vector is reordered; reject incomplete or duplicate field names.
+- Keep page titles as plain text during UI localisation.
+- Bound SPSS import reads to detect the documented row limit.
+- Restore dependencies into the actual project library, align the R version
+  pin and CI system libraries, and make test runners reject warnings, skipped
+  checks and empty runs.
+- Separate user and contributor documentation, align shared technical guidance,
+  and replace cloud-instance validation notes with reproducible test documentation.
 - Updated to R 4.6.2 and current stable CRAN dependencies, including ggplot2
   4.0.3 and callr 3.8.0. Updated Playwright to 1.64.1 and aligned
   setup instructions and CI with the tested versions.
@@ -13,7 +22,7 @@
 
 ## 2.1.0 — 2026-10-31
 
-- Checked the implementation against the supplied Harris et al. (2015) original,
+- Compared the implementation with Harris et al. (2015),
   including item rules, final norms, missing-data instructions and worked
   examples. Documented observed-versus-final rates, percentile differences and
   inconsistencies in the book examples. The German manual remains authoritative
@@ -32,7 +41,7 @@
 ## 2.0.0 — 2026-10-31
 
 - Reviewed all implemented rules against the German VRAG-R manual; documented
-  scope, unavailable primary books, source-table typo, numerical conventions
+  scope, source-table typo, numerical conventions
   and calibration limitations.
 - Fixed Item 3 prorating/rounding, divergent duplicated scoring, missing app
   upper-tail percentiles, ambiguous probability keys, invalid-value handling,
@@ -51,4 +60,4 @@
 - Added renv dependencies, run/setup scripts, CI, model/operating documentation,
   unit/server tests and bilingual browser/layout regression tests.
 - Preserved the original project's unspecified licence; included MIT notices
-  for reused OGRS infrastructure. No remote deployment was performed.
+  for reused OGRS infrastructure.

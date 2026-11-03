@@ -1,68 +1,47 @@
-# Validation record
+# Software validation
 
-App version **2.1.0**, validated locally on 31 October 2026 with R 4.6.2
-and the package versions in `renv.lock`. Test inputs are synthetic or derived
-from published worked examples; no user case records are included.
+The test suites check scoring consistency and application behavior. They are
+not a clinical validation study, certification or evidence of calibration in a
+new population. Coding and interpretation require the published instrument
+manuals; see [Model and sources](MODEL_AND_SOURCES.md).
 
-| Check | Observed result |
-| --- | --- |
-| `Rscript tests/run.R` | **21 test groups, 562 passing expectations**, no failures, warnings or skipped checks |
-| Current dependency versions | All **75 locked R packages** match the stable CRAN index checked on 31 October 2026; R 4.6.2 and Playwright 1.64.1 match the official release indexes |
-| Clean restore | `testthat` confirmed absent in a new isolated library, then all locked dependencies restored and the full R suite passed |
-| German-manual scoring fixtures | All **81 attainable totals**, expected item scores, category boundaries, percentiles and five-/twelve-year rates match the independent fixtures |
-| Original-source fixtures | All nine final category/rate rows in Harris Table C.1 match; Appendix G and both explicit interpretations of Appendix H produce the expected scores and rates |
-| Source precedence | German-manual definitions and percentiles retained where the English source differs; disagreements and worked-example inconsistencies documented separately |
-| Missing data | Published +11 / +35 example gives 14; Item 3 rounding, facet 4 thresholds, positive/negative totals and the exact −8.5 midpoint convention pass |
-| Default answers | Every single-case item starts missing; all 45 Cormier–Lang counts start at zero, enter scoring only when information is available, preserve edits across status/language switches and reset to zero |
-| Invalid/empty data | Unknown categories, negative/fractional counts, invalid PCL-R scores and empty data frames handled as specified |
-| Large batch | 100,000 fully observed rows score correctly |
-| Imports | XLSX worksheet selection, both CSV separators, TXT and SAV; malformed tables, empty/duplicate headers, text IDs and literal `NA` values checked |
-| Server state | Explicit calculation, complete input/mapping snapshots, language-independent results, freshness and optional ID checks pass |
-| Plots | Empirical and optional standard-normal views render without warnings, including upper-tail percentile 100; plot choice preserves scoring state, calculation time and CSV data |
-| `python3 tests/browser_smoke.py` | **Pass**, using Playwright and the installed system Chromium |
-| Browser functionality | Missing/zero defaults, real calculation, uploads, mapping, invalid-row retention, five plot download formats, stable CSV filenames/bytes/timestamps and server-side stale-download rejection pass |
-| Language and layout | EN/DE switching, independent English-start sessions, raw names/values, custom mappings, long unbroken headers and 390/768/1024/1280/1440/1920px viewports pass |
-| Visual review | German normal/empirical single-case views, About and fully opened mobile navigation reviewed; no horizontal page overflow or clipped selected labels in the checked controls |
-| Source and development text | Browser checks confirm German source precedence and the shortened bilingual Codex disclosure; README remains English-only |
+## Independent references
 
-Browser screenshots and downloads are generated under ignored `tests/artifacts/`.
-Logs in this prepared instance are retained under
-`/workspace/.vragr-cloud/logs/`, including `r462-tests-final.log`,
-`r462-browser-final.log`, `r462-app-final.log` and `r462-installer-repeat.log`. They are not committed
-application content.
+`tests/fixtures/manual-reference.csv` contains 81 cases, covering every
+attainable total from −34 through +46, with independent item scores and the
+German manual's categories, percentiles and reference rates. Additional fixtures
+transcribe Harris et al. (2015) final norms and worked examples, including both
+interpretations of the inconsistent Appendix H checklist. See the
+[original-source review](ORIGINAL_SOURCE_REVIEW.md) for that discrepancy.
 
-## Dependency and runtime checks
+Fixture expectations are independent of the scoring implementation. See the
+[fixture notes](../tests/fixtures/README.md) for provenance. Tests and examples
+contain no user case records.
 
-The R 4.6.2 refresh updates ggplot2 from 3.5.2 to 4.0.3 and callr from 3.7.6
-to 3.8.0. S7 0.2.2 is a new dependency; MASS, Matrix, lattice, mgcv and nlme
-are no longer required and were removed by `renv::snapshot()`. Every retained
-package was compared with the current CRAN index. The lockfile was generated
-from packages actually installed under R 4.6.2, not by editing version fields.
+## Coverage
 
-The full suite passed after restoring into a newly created, isolated renv
-library where `testthat` was confirmed absent beforehand. Test dependencies
-remain in the lockfile and `snapshot.dev` remains enabled. The self-contained
-cloud installer pins 96 native runtime/compiler artifacts with SHA-256 hashes;
-rerunning it completed successfully. Its R dependencies are restored from the
-project lockfile. Playwright 1.64.1 and its current compatible Python
-dependencies were installed for the browser checks. The documented startup
-command serves the app with the project library.
+The R suite checks every item band and Cormier–Lang weight, missing-data
+prorating, rounding conventions, invalid and empty data, a 100,000-row batch,
+imports, IDs, exports, calculation freshness, translations and both plot views.
+Browser checks also exercise the five plot download formats and multiple
+viewport widths. Numerical conventions and percentile extensions are documented
+in the model guide rather than treated as additional published norms.
 
-The command sandbox can prevent renv's local socket lock. R checks and browser
-connections used the supported command context that permits those operations,
-without disabling renv isolation or TLS verification.
+The R runner reports the tests and assertions executed and fails on failures,
+warnings, skipped checks or an empty run. Browser tests exercise real Shiny
+sessions, calculations, mappings, uploads, downloads, language switching and
+responsive layouts. Inspect the current test output and CI results for the
+revision being evaluated; historical results do not establish that a later
+revision passes.
 
-## Limits of this record
+See [Contributing](../CONTRIBUTING.md) for reproducible commands, browser
+requirements and artifact locations. Test dependencies are recorded in
+`renv.lock` and `tests/requirements-browser.txt`.
 
-These software checks are not a clinical validation or certification. The
-German manual is the governing reference. The supplied Harris et al. (2015)
-publication was checked in the sections listed in the
-[original-source review](ORIGINAL_SOURCE_REVIEW.md); the separate full Hare
-PCL-R manual was not available for independent review. Exact midpoint rounding,
-the empirical percentile extension and finite normal-plot endpoints are
-documented software decisions, not additional published normative entries.
+## Limits
 
-The results above describe local checks, not a claimed GitHub Actions run.
-No deployment to shinyapps.io or cloud snapshot publication is part of this
-revision. A separately published deployment requires its own smoke test and
-deployment-specific operating/privacy information.
+Passing tests establish the behavior exercised by those checks. They do not
+verify every possible input, assess the quality of professional item coding,
+validate local risk calibration or establish that a hosting environment is
+suitable for sensitive data. A hosted release needs its own functional checks
+and deployment-specific operating/privacy information.

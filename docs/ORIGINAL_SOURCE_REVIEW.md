@@ -1,15 +1,14 @@
 # Review against Harris et al. (2015)
 
-Reviewed for app version **2.1.0**, 31 October 2026. This supplements the
-[German-manual review](MODEL_AND_SOURCES.md).
+This comparison supplements the [German-manual specification](MODEL_AND_SOURCES.md).
 
 **Harris, G. T., Rice, M. E., Quinsey, V. L. & Cormier, C. A. (2015).**
 *Violent offenders: Appraising and managing risk* (3rd ed.). American
 Psychological Association. [doi:10.1037/14572-000](https://doi.org/10.1037/14572-000).
 
-The user supplied the original book for review. The supplied PDF has SHA-256
+The reviewed edition has PDF SHA-256
 `b068949e7845a1de349b5a48aa2f374ddc25e31ed1ae639902b295960f52bc84`.
-It is kept outside the application checkout and is **not redistributed**.
+The book is **not redistributed** in this repository.
 Page references below are printed pages; PDF pages are 17 higher.
 
 **Source precedence:** the German manual remains the governing reference
@@ -102,7 +101,7 @@ category. Coding a particular offence remains a manual-based professional task.
 
 English Table A.1 uses **conspiracy**, while German Table 3 uses
 **Mittäterschaft (Delikte in Absprache mit anderen Tätern)**. The app preserves
-the German label as instructed, with ordinary readability improvements elsewhere.
+the German label and its coding meaning.
 The review does not equate every German legal concept of joint perpetration with
 the Canadian concept of conspiracy or create a statutory crosswalk.
 

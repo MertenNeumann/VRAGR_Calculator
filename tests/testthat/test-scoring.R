@@ -49,7 +49,7 @@ test_that("every Cormier-Lang weight and score band is independently checked", {
     x$Item_8_7 <- pair[1]%%2; expect_equal(vragr(x)$Item_8_score,pair[2])
   }
 })
-test_that("item 3 prorating rounds before scoring, including the legacy bug", {
+test_that("item 3 prorating rounds before applying score bands", {
   for(n in 0:6) {
     x <- minimum_case(); if(n) x[paste0("Item_3_",seq_len(n))] <- "Yes"
     expect_equal(vragr(x)$Item_3_score,c(-2,-2,-2,0,1,4,4)[n+1])
@@ -92,7 +92,7 @@ test_that("the published missing-item example yields 14, with distinct rates", {
   x <- minimum_case();x$Item_1 <- NA;x$Item_5_1 <- 3;x$Item_6 <- "Yes";x$Item_7 <- 25;x$Item_11 <- "Only14"
   expect_equal(vragr(x)$Score,-9)
 })
-test_that("legacy synthetic data helpers retain the input schema without MASS", {
+test_that("synthetic data helpers preserve the input schema", {
   set.seed(1)
   data <- sim_vrag_data(5,prob_missing=0)
   expect_identical(names(data),vragr_fields)

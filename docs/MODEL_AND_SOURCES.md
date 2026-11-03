@@ -1,8 +1,8 @@
 # Model and source review
 
-Review date: 31 October 2026. Current app version: **2.1.0**.
-The initial German-manual review used baseline
-`d522a4b7e2fb33995e2df26a58535a4c359bc57f`.
+The calculator implements the German VRAG-R coding, with the original English
+publication used as an additional source comparison. Both interface languages
+use the same scoring rules and German percentile reference.
 
 ## Sources and scope
 
@@ -18,17 +18,15 @@ It is not redistributed in this repository.
 The manual identifies **Harris, Rice, Quinsey & Cormier (2015), Violent
 offenders: Appraising and managing risk, 3rd ed.**, [doi:10.1037/14572-000](https://doi.org/10.1037/14572-000),
 as the model source. Item 12 refers to **Hare (2003), Manual for the
-Psychopathy Checklist-Revised, 2nd ed.** The supplied original Harris et al.
-book has now been checked against the implementation: Chapter 5, the relevant
-outcome discussion, Appendices A–F and the scoring examples in G/H. The
-separate Hare manual remains unavailable; its full PCL-R diagnostic criteria
-have not been independently checked. The public German manual remains the
-implementation's percentile reference. See the [original-source review](ORIGINAL_SOURCE_REVIEW.md)
-for agreements, table differences and inconsistencies in the book examples.
-**Where the sources conflict, the German manual is authoritative for the app**,
-including item definitions, coding and interpretation, not only percentiles.
-The historical `www.vrag-r.org` endpoint could not be retrieved; no current
-rules were inferred from that unavailable website.
+Psychopathy Checklist-Revised, 2nd ed.**
+
+The comparison with Harris et al. covers Chapter 5, the outcome definition,
+Appendices A–F and the scoring examples in G/H. See the
+[original-source review](ORIGINAL_SOURCE_REVIEW.md) for agreements, table
+differences and inconsistencies in the worked examples.
+**Where the sources conflict, the German manual takes precedence**, including
+item definitions, coding and interpretation. The calculator does not replace
+the separate Hare manual required for full PCL-R assessment.
 
 ## Item inventory checked against the manual
 
@@ -106,15 +104,15 @@ maximum +35, missing Items 9 and 10 maximum +11, adjusted 14.457… → **14**.
 The German manual does not explicitly settle exact .5 ties. This implementation
 documents a nearest-integer, **halves away from zero** convention, rather than
 R's implicit ties-to-even. It can affect a prorated result exactly at a half:
-−8.5 now becomes −9 rather than −8. This is an explicit software convention,
+−8.5 becomes −9 rather than −8. This is an explicit software convention,
 not a claimed additional empirical rule.
 
 For partially unknown subitems in **5, 8 and 10**, the app conservatively marks
 the whole item missing. No subitem prorating formula is supplied there by the
 manual. Invalid data (negative or fractional counts, invalid categories,
 out-of-range PCL-R scores) are distinguished from genuine missing information.
-Age must be positive and in completed years; no unsupported age-10/120 bounds
-or automatic eligibility decisions have been introduced. All single-case items
+Age must be positive and in completed years. The software does not impose an
+upper age cap or determine eligibility for the instrument. All single-case items
 initially remain missing. For Items 5 and 8, selecting Information available
 uses the displayed counts, initially zero for every category. The user must
 review these counts; selecting No information excludes them from scoring.
@@ -146,7 +144,7 @@ The default single-case plot shows this empirical cumulative distribution.
 An optional standard-normal curve illustrates the same percentile through its
 normal quantile and shaded area; it does not fit a normal distribution to
 VRAG-R totals. Percentile 100 is shown at the finite right plot boundary,
-avoiding the former infinite `qnorm(1)` at upper-tail values. Changing views
+because `qnorm(1)` is infinite. Changing views
 does not alter calculations, reference values or CSV exports.
 
 Violent recidivism is defined on pp. 7–8; it includes new charges and qualifying
@@ -157,25 +155,9 @@ rates for violence-free years in the community (pp. 14–16), custody length,
 treatment or dynamic changes. Neither rates nor percentiles establish an
 individual's certain outcome or the accuracy of local calibration.
 
-## Bugs corrected before the interface refactor
+## R API compatibility
 
-1. Item 3 prorating was not rounded before categorical comparison, producing
-   a false missing item for values such as 3.6 and changing the total.
-2. App and standalone code were duplicated and divergent. The app omitted
-   percentiles for 45/46; it also returned duplicate, misspelled five-year
-   probability keys for different follow-up periods. A single core now serves
-   both workflows, with distinct five-/twelve-year outputs.
-3. The private missing-score helper used `sum(idx_missing > 4)` instead of
-   counting missing values. An outer guard previously masked this error.
-4. Invalid binary categories were silently scored as No. Negative and fractional
-   counts and ages could reach scoring. Validation now rejects invalid rows.
-5. The `1:nrow(data)` loop mishandled empty datasets. Empty outputs now retain
-   their defined schema; named fields also avoid positional column-order errors.
-6. CSV/TXT readers were called without importing readr. Readers are now qualified.
-7. Edits could leave old results available for download. Both workflows and all
-   download handlers now check a complete scoring/input snapshot.
-
-`vragr(data)` is the new independent API (probabilities 0–1).
+`vragr(data)` is the independent API (probabilities 0–1).
 `compute_vrag(...)` and `compute_vrag_data(...)` retain the 75-field input
 order and legacy percentage probabilities. The single-case API preserves the
 original 75-argument signature, including named and positional scalar inputs.

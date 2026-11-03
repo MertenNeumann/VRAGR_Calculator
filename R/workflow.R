@@ -8,7 +8,7 @@ read_vragr_file <- function(path, format = "auto", filename = basename(path), sh
   }
   data <- switch(format,
     xlsx = readxl::read_excel(path, sheet = sheet, .name_repair = "minimal", n_max = 100001L),
-    sav = haven::read_sav(path),
+    sav = haven::read_sav(path, n_max = 100001L),
     csv = readr::read_delim(path, delim = ",", col_types = readr::cols(.default = "c"),
       name_repair = "minimal", show_col_types = FALSE, progress = FALSE, skip_empty_rows = FALSE, na = "", trim_ws = FALSE, n_max = 100001L),
     csv2 = readr::read_delim(path, delim = ";", col_types = readr::cols(.default = "c"),
@@ -55,6 +55,12 @@ default_category <- function(value, field, labels = NULL) {
   ""
 }
 prepare_vragr_data <- function(raw, columns, maps, decimal_mark = ".") {
+  if (!is.null(names(columns))) {
+    if (anyDuplicated(names(columns)) || !setequal(names(columns), vragr_fields)) {
+      stop("Name each column mapping with one of the 75 VRAG-R input names.", call. = FALSE)
+    }
+    columns <- columns[vragr_fields]
+  }
   if (length(columns) != 75L || any(!columns %in% names(raw)) || anyDuplicated(columns))
     stop("Map all 75 inputs to distinct existing columns.", call. = FALSE)
   data <- raw[unname(columns)]; names(data) <- vragr_fields
