@@ -77,7 +77,7 @@ An explicitly loaded example is available for trying the workflow.
 **Dataset.** Upload XLSX, comma- or semicolon-separated CSV, tab-separated TXT, or
 SPSS SAV. The limits are **10 MiB** and **100,000 data rows**. Select the worksheet
 and decimal mark where needed, map all 75 input fields to distinct columns, and
-check the suggested category mappings. An optional pseudonymous ID must be present
+check the suggested category mappings. An optional row ID must be present
 and unique in every row. CSV identifiers are read as text to preserve leading zeroes.
 The downloadable [example dataset](examples/example-data.csv) illustrates the layout.
 
@@ -188,6 +188,8 @@ downloads and responsive layouts in both languages. See
 Calculations and uploads are processed **on the server**. Read
 [Data processing and deployment](docs/DATA_AND_DEPLOYMENT.md) for temporary-file
 handling, hosting requirements and deployment-specific privacy information.
+Use only data that cannot be linked to an individual; removing names or using
+row IDs does not by itself establish anonymity.
 
 Report bugs, feature requests and suggestions through
 [GitHub Issues](https://github.com/MertenNeumann/VRAGR_Calculator/issues), using

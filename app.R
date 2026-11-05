@@ -71,7 +71,7 @@ ui <- page_navbar(
             numericInput("plot_dpi","Resolution (DPI)",150,min=72,max=600),uiOutput("plot_download_control"))))))),
   nav_panel("Dataset",value="batch",
     intro("DATASET CALCULATION","Calculate results for a dataset.","Upload a file, map its columns and categories, review the data checks, then calculate and export the results. A downloadable synthetic example contains all 75 input columns."),
-    notice(tags$strong("Minimise uploaded data. "),"Only the required fields and an optional pseudonymous case ID are needed. Do not upload names, dates of birth or original case reference numbers."),
+    notice(tags$strong("Minimise uploaded data. "),"Use only data that cannot be linked to an individual. Upload only the required inputs and, if needed, a row ID. Names, dates of birth and case reference numbers are not needed."),
     layout_columns(col_widths=c(5,7),
       card(card_header(h2("1 · Choose a file")),fileInput("batch_file","Upload dataset (maximum 10 MiB)",
         accept=c(".xlsx",".csv",".txt",".sav"),buttonLabel="Choose file",placeholder="No file selected"),
@@ -127,10 +127,11 @@ ui <- page_navbar(
         p(external_link("OGRS 3 calculator","https://mertenneumann.shinyapps.io/OGRS_Calculator/")),
         p(external_link("OGRS 3 source code","https://github.com/MertenNeumann/OGRS_Calculator")))),
     card(card_header(h2("Data processing")),
-      p("Calculations and uploads run on the server. The application code does not create a permanent case database or log case details. Inputs and files remain available for processing during the session."),
-      p("Temporary uploads are removed on replacement and recognised session end where the server can execute cleanup. Disconnects, crashes, hosting logs and backups have separate limits; immediate or complete deletion is not guaranteed."),
-      p("For shinyapps.io, Posit documents hosting on AWS in us-east-1 (USA)."),
-      p(external_link("Posit security and compliance documentation","https://docs.posit.co/shinyapps.io/guide/security_and_compliance/index.html"))),
+      p("Calculations and uploads are processed on the server. The app does not create a permanent case database. Technical warnings and error messages may contain uploaded values and be recorded in server logs."),
+      p("Use only data that cannot be linked to an individual. Replacing names with case IDs does not necessarily make data anonymous."),
+      p("The app removes recorded temporary upload files on replacement and recognised session end when cleanup can run. Hosting logs, backups and downloaded copies have separate retention and deletion arrangements."),
+      p("For Posit Connect Cloud, Posit documents hosting on AWS in us-east-2 (USA)."),
+      p(external_link("Posit Connect Cloud security documentation","https://docs.posit.co/connect-cloud/user/platform/security.html"), " · ", external_link("Posit privacy policy","https://posit.co/about/privacy-policy/"), " · ", external_link("Posit service terms","https://posit.co/about/posit-service-terms-of-use/"))),
     card(card_header(h2("AI-assisted development")),
       p("OpenAI Codex assisted with revising the code, interface, documentation and software tests. The app calculates results using the documented R code; no AI model is used to score cases."))),
   nav_spacer(),nav_item(div(class="language-control",i18n_select_input("language","Language / Sprache",c("English"="en","Deutsch"="de"),selected="en",selectize=FALSE))))
@@ -276,7 +277,7 @@ server <- function(input,output,session) {
     controls <- lapply(vragr_fields,function(field) i18n_select_input(paste0("column_",field),tagList(tags$small(class="field-code",field)," ",field_labels()[field]),choices,selected=if(field %in% names(data)) field else ""))
     tagList(accordion(!!!lapply(.vragr_schema,function(group) accordion_panel(paste0("Item ",group$item," · ",group$en),
       div(class="form-grid",controls[match(vapply(group$fields,`[[`,character(1),"name"),vragr_fields)]))),open=FALSE),
-      i18n_select_input("batch_id","Optional pseudonymous case ID",c("Use row numbers only"="",setNames(names(data),names(data))),selected=""))
+      i18n_select_input("batch_id","Optional row ID",c("Use row numbers only"="",setNames(names(data),names(data))),selected=""))
   })
   selected_columns <- reactive(setNames(vapply(vragr_fields,function(field) input[[paste0("column_",field)]] %||% "",character(1)),vragr_fields))
   mapping_values <- reactive({

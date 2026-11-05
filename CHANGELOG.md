@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Update the EN/DE data-processing text and provider links for Connect Cloud,
+  clarify logging and non-identifiable inputs, and use neutral row-ID wording.
 - Show live item-completion badges, missing-input counts and scoreability in
   collapsed single-case item headers, with English/German and invalid-input states.
 - Flag cleared numeric fields as incomplete when an item is marked as known,
