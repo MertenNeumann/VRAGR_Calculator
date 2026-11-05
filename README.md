@@ -200,5 +200,6 @@ The license does not grant rights to the cited manuals, instruments or other
 published source material. Adapted OGRS components retain their MIT notice in
 [NOTICE](NOTICE) and [LICENSES/OGRS-MIT.txt](LICENSES/OGRS-MIT.txt).
 
-OpenAI Codex assisted with code, interface, documentation and tests. Case
-calculations use the documented R code; no AI model is used to score cases.
+[OpenAI Codex](https://github.com/codex) assisted with code, interface,
+documentation and tests. Case calculations use the documented R code; no AI
+model is used to score cases.
